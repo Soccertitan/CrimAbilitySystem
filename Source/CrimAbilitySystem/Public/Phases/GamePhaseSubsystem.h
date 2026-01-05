@@ -1,4 +1,4 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 #pragma once
 
@@ -6,15 +6,15 @@
 #include "GameplayAbilitySpecHandle.h"
 #include "GameplayTagContainer.h"
 #include "Subsystems/WorldSubsystem.h"
-#include "CrimGamePhaseSubsystem.generated.h"
+#include "GamePhaseSubsystem.generated.h"
 
 class UGamePhaseGameplayAbility;
 
-DECLARE_DYNAMIC_DELEGATE_OneParam(FCrimGamePhaseDynamicDelegate, const UGamePhaseGameplayAbility*, Phase);
-DECLARE_DELEGATE_OneParam(FCrimGamePhaseDelegate, const UGamePhaseGameplayAbility* Phase);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FGamePhaseDynamicDelegate, const UGamePhaseGameplayAbility*, Phase);
+DECLARE_DELEGATE_OneParam(FGamePhaseDelegate, const UGamePhaseGameplayAbility* Phase);
 
-DECLARE_DYNAMIC_DELEGATE_OneParam(FCrimGamePhaseTagDynamicDelegate, const FGameplayTag&, PhaseTag);
-DECLARE_DELEGATE_OneParam(FCrimGamePhaseTagDelegate, const FGameplayTag& PhaseTag);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FGamePhaseTagDynamicDelegate, const FGameplayTag&, PhaseTag);
+DECLARE_DELEGATE_OneParam(FGamePhaseTagDelegate, const FGameplayTag& PhaseTag);
 
 // Match rule for message receivers
 UENUM(BlueprintType)
@@ -45,40 +45,40 @@ class CRIMABILITYSYSTEM_API UGamePhaseSubsystem : public UWorldSubsystem
 public:
 	UGamePhaseSubsystem();
 
-	void StartPhase(TSubclassOf<UGamePhaseGameplayAbility> PhaseAbility, FCrimGamePhaseDelegate PhaseEndedCallback = FCrimGamePhaseDelegate());
+	void StartPhase(TSubclassOf<UGamePhaseGameplayAbility> PhaseAbility, FGamePhaseDelegate PhaseEndedCallback = FGamePhaseDelegate());
 
 	//TODO Return a handle so folks can delete these.  They will just grow until the world resets.
 	//TODO Should we just occasionally clean these observers up?  It's not as if everyone will properly unhook them even if there is a handle.
-	void WhenPhaseStartsOrIsActive(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, const FCrimGamePhaseTagDelegate& WhenPhaseActive);
-	void WhenPhaseEnds(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, const FCrimGamePhaseTagDelegate& WhenPhaseEnd);
+	void WhenPhaseStartsOrIsActive(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, const FGamePhaseTagDelegate& WhenPhaseActive);
+	void WhenPhaseEnds(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, const FGamePhaseTagDelegate& WhenPhaseEnd);
 
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, BlueprintPure = false, meta = (AutoCreateRefTerm = "PhaseTag"))
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Crim Ability System|Game Phase", BlueprintPure = false, meta = (AutoCreateRefTerm = "PhaseTag"))
 	bool IsPhaseActive(const FGameplayTag& PhaseTag) const;
 
 protected:
 	virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override;
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Crim Ability System|Game Phase", meta = (DisplayName="Start Phase", AutoCreateRefTerm = "PhaseEnded"))
-	void K2_StartPhase(TSubclassOf<UGamePhaseGameplayAbility> PhaseAbility, const FCrimGamePhaseDynamicDelegate& PhaseEnded);
+	void K2_StartPhase(TSubclassOf<UGamePhaseGameplayAbility> PhaseAbility, const FGamePhaseDynamicDelegate& PhaseEnded);
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Crim Ability System|Game Phase", meta = (DisplayName = "When Phase Starts or Is Active", AutoCreateRefTerm = "WhenPhaseActive"))
-	void K2_WhenPhaseStartsOrIsActive(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, FCrimGamePhaseTagDynamicDelegate WhenPhaseActive);
+	void K2_WhenPhaseStartsOrIsActive(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, FGamePhaseTagDynamicDelegate WhenPhaseActive);
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Crim Ability System|Game Phase", meta = (DisplayName = "When Phase Ends", AutoCreateRefTerm = "WhenPhaseEnd"))
-	void K2_WhenPhaseEnds(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, FCrimGamePhaseTagDynamicDelegate WhenPhaseEnd);
+	void K2_WhenPhaseEnds(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, FGamePhaseTagDynamicDelegate WhenPhaseEnd);
 
 	void OnBeginPhase(const UGamePhaseGameplayAbility* PhaseAbility, const FGameplayAbilitySpecHandle PhaseAbilityHandle);
 	void OnEndPhase(const UGamePhaseGameplayAbility* PhaseAbility, const FGameplayAbilitySpecHandle PhaseAbilityHandle);
 
 private:
 
-	struct FCrimGamePhaseEntry
+	struct FGamePhaseEntry
 	{
 		FGameplayTag PhaseTag;
-		FCrimGamePhaseDelegate PhaseEndedCallback;
+		FGamePhaseDelegate PhaseEndedCallback;
 	};
 
-	TMap<FGameplayAbilitySpecHandle, FCrimGamePhaseEntry> ActivePhaseMap;
+	TMap<FGameplayAbilitySpecHandle, FGamePhaseEntry> ActivePhaseMap;
 
 	struct FPhaseObserver
 	{
@@ -86,7 +86,7 @@ private:
 	
 		FGameplayTag PhaseTag;
 		EPhaseTagMatchType MatchType = EPhaseTagMatchType::ExactMatch;
-		FCrimGamePhaseTagDelegate PhaseCallback;
+		FGamePhaseTagDelegate PhaseCallback;
 	};
 
 	TArray<FPhaseObserver> PhaseStartObservers;

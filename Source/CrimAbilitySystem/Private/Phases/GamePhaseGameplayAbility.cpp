@@ -1,10 +1,10 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 
 #include "Phases/GamePhaseGameplayAbility.h"
 
 #include "AbilitySystemComponent.h"
-#include "Phases/CrimGamePhaseSubsystem.h"
+#include "Phases/GamePhaseSubsystem.h"
 
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"

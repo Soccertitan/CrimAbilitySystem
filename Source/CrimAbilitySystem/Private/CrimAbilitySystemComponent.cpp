@@ -1,4 +1,4 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 
 #include "CrimAbilitySystemComponent.h"
@@ -37,6 +37,7 @@ void UCrimAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AAc
 
 	if (bHasNewPawnAvatar)
 	{
+		ABILITYLIST_SCOPE_LOCK();
 		// Notify all abilities that a new pawn avatar has been set
 		for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
 		{
@@ -65,30 +66,29 @@ void UCrimAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AAc
 				CrimAbilityCDO->OnPawnAvatarSet();
 			}
 		}
+	}
+	
+	if (UCrimGlobalAbilitySystem* GlobalAbilitySystem = UWorld::GetSubsystem<UCrimGlobalAbilitySystem>(GetWorld()))
+	{
+		GlobalAbilitySystem->RegisterAbilitySystemComponent(this);
+	}
 
-		// Register with the global system once we actually have a pawn avatar. We wait until this time since some globally-applied effects may require an avatar.
-		if (UCrimGlobalAbilitySystem* GlobalAbilitySystem = UWorld::GetSubsystem<UCrimGlobalAbilitySystem>(GetWorld()))
-		{
-			GlobalAbilitySystem->RegisterAbilitySystemComponent(this);
-		}
+	TArray<UActorComponent*> ActorComponents = InOwnerActor->GetComponentsByInterface(UCrimAbilitySystemInterface::StaticClass());
+	for (UActorComponent*& Component : ActorComponents)
+	{
+		ICrimAbilitySystemInterface::Execute_InitializeWithAbilitySystem(Component, this);
+	}
 
-		TArray<UActorComponent*> ActorComponents = InOwnerActor->GetComponentsByInterface(UCrimAbilitySystemInterface::StaticClass());
+	if (InOwnerActor != InAvatarActor)
+	{
+		ActorComponents = InAvatarActor->GetComponentsByInterface(UCrimAbilitySystemInterface::StaticClass());
 		for (UActorComponent*& Component : ActorComponents)
 		{
 			ICrimAbilitySystemInterface::Execute_InitializeWithAbilitySystem(Component, this);
 		}
-
-		if (InOwnerActor != InAvatarActor)
-		{
-			ActorComponents = InAvatarActor->GetComponentsByInterface(UCrimAbilitySystemInterface::StaticClass());
-			for (UActorComponent*& Component : ActorComponents)
-			{
-				ICrimAbilitySystemInterface::Execute_InitializeWithAbilitySystem(Component, this);
-			}
-		}
-
-		TryActivateAbilitiesOnSpawn();
 	}
+
+	TryActivateAbilitiesOnSpawn();
 }
 
 void UCrimAbilitySystemComponent::CancelAbilitiesByFunc(TShouldCancelAbilityFunc ShouldCancelFunc, bool bReplicateCancelAbility)

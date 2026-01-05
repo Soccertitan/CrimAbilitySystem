@@ -1,4 +1,4 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 #pragma once
 
@@ -8,7 +8,7 @@
 #include "TacticalPointsAttributeSet.generated.h"
 
 /**
- * Class that defines attributes that are necessary for activating abilities.
+ * Class that defines attributes that are necessary for activating abilities. Like mana, action points, etc.
  */
 UCLASS()
 class CRIMABILITYSYSTEM_API UTacticalPointsAttributeSet : public UCrimAttributeSet

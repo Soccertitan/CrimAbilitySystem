@@ -1,4 +1,4 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 
 #include "Attribute/HitPointsComponent.h"
@@ -34,7 +34,7 @@ void UHitPointsComponent::InitializeWithAbilitySystem_Implementation(UCrimAbilit
 
 	if (AbilitySystemComponent)
 	{
-		UE_LOG(LogCrimAbilitySystem, Error, TEXT("HitPointsComponent: Hit Points component for owner [%s] has already been initialized with an ability system."), *GetNameSafe(Owner));
+		UE_LOG(LogCrimAbilitySystem, Log, TEXT("HitPointsComponent: Hit Points component for owner [%s] has already been initialized with an ability system."), *GetNameSafe(Owner));
 		return;
 	}
 
@@ -48,20 +48,21 @@ void UHitPointsComponent::InitializeWithAbilitySystem_Implementation(UCrimAbilit
 	HitPointsSet = AbilitySystemComponent->GetSet<UHitPointsAttributeSet>();
 	if (!HitPointsSet)
 	{
-		UE_LOG(LogCrimAbilitySystem, Error, TEXT("HitPointsComponent: Cannot initialize health component for owner [%s] with NULL health set on the ability system."), *GetNameSafe(Owner));
+		UE_LOG(LogCrimAbilitySystem, Warning, TEXT("HitPointsComponent: Cannot initialize health component for owner [%s] with NULL HitPointsAttributeSet on the ability system."), *GetNameSafe(Owner));
+		AbilitySystemComponent = nullptr;
 		return;
 	}
 
 	// Register to listen for attribute changes.
-	HitPointsSet->OnHitPointsUpdatedDelegate.AddUObject(this, &ThisClass::OnHitPointsUpdated);
-	HitPointsSet->OnMaxHitPointsUpdatedDelegate.AddUObject(this, &ThisClass::OnMaxHitPointsUpdated);
-	HitPointsSet->OnOutOfHitPointsDelegate.AddUObject(this, &ThisClass::OnOutOfHitPoints);
-	HitPointsSet->OnHitPointsUpdatedFromZeroDelegate.AddUObject(this, &ThisClass::OnHitPointsUpdatedFromZero);
+	HitPointsSet->OnCurrentPointsUpdatedDelegate.AddUObject(this, &ThisClass::OnHitPointsUpdated);
+	HitPointsSet->OnMaxPointsUpdatedDelegate.AddUObject(this, &ThisClass::OnMaxHitPointsUpdated);
+	HitPointsSet->OnOutOfCurrentPointsDelegate.AddUObject(this, &ThisClass::OnOutOfHitPoints);
+	HitPointsSet->OnCurrentPointsUpdatedFromZeroDelegate.AddUObject(this, &ThisClass::OnHitPointsUpdatedFromZero);
 
-	ClearGameplayTags();
-
-	OnHitPointsUpdatedDelegate.Broadcast(this, HitPointsSet->GetHitPoints(), HitPointsSet->GetHitPoints(), nullptr);
-	OnMaxHitPointsUpdatedDelegate.Broadcast(this, HitPointsSet->GetMaxHitPoints(), HitPointsSet->GetMaxHitPoints(), nullptr);
+	OnHitPointsUpdatedDelegate.Broadcast(this, HitPointsSet->GetCurrentPoints(), HitPointsSet->GetCurrentPoints(), nullptr);
+	OnMaxHitPointsUpdatedDelegate.Broadcast(this, HitPointsSet->GetMaxPoints(), HitPointsSet->GetMaxPoints(), nullptr);
+	
+	UE_LOG(LogCrimAbilitySystem, Log, TEXT("HitPointsComponent: has been initialized for owner [%s]."), *GetNameSafe(Owner));
 }
 
 void UHitPointsComponent::UninitializeFromAbilitySystem()
@@ -70,9 +71,9 @@ void UHitPointsComponent::UninitializeFromAbilitySystem()
 
 	if (HitPointsSet)
 	{
-		HitPointsSet->OnHitPointsUpdatedDelegate.RemoveAll(this);
-		HitPointsSet->OnMaxHitPointsUpdatedDelegate.RemoveAll(this);
-		HitPointsSet->OnOutOfHitPointsDelegate.RemoveAll(this);
+		HitPointsSet->OnCurrentPointsUpdatedDelegate.RemoveAll(this);
+		HitPointsSet->OnMaxPointsUpdatedDelegate.RemoveAll(this);
+		HitPointsSet->OnOutOfCurrentPointsDelegate.RemoveAll(this);
 	}
 
 	HitPointsSet = nullptr;
@@ -81,12 +82,12 @@ void UHitPointsComponent::UninitializeFromAbilitySystem()
 
 float UHitPointsComponent::GetHitPoints() const
 {
-	return HitPointsSet ? HitPointsSet->GetHitPoints() : 0;
+	return HitPointsSet ? HitPointsSet->GetCurrentPoints() : 0;
 }
 
 float UHitPointsComponent::GetMaxHitPoints() const
 {
-	return HitPointsSet ? HitPointsSet->GetMaxHitPoints() : 0;
+	return HitPointsSet ? HitPointsSet->GetMaxPoints() : 0;
 }
 
 float UHitPointsComponent::GetHitPointsNormalized() const
@@ -267,7 +268,6 @@ void UHitPointsComponent::OnHitPointsUpdatedFromZero(AActor* RestoreInstigator, 
 
 void UHitPointsComponent::OnRep_DeathState(EDeathState OldDeathState)
 {
-	//TODO: Refactor to account for resurrection.
 	const EDeathState NewDeathState = DeathState;
 
 	// Revert the death state for now since we rely on StartDeath and FinishDeath to change it.
@@ -294,6 +294,33 @@ void UHitPointsComponent::OnRep_DeathState(EDeathState OldDeathState)
 		if (NewDeathState == EDeathState::DeathFinished)
 		{
 			FinishDeath();
+		}
+		else
+		{
+			UE_LOG(LogCrimAbilitySystem, Error, TEXT("HitPointsComponent: Invalid death transition [%d] -> [%d] for owner [%s]."), (uint8)OldDeathState, (uint8)NewDeathState, *GetNameSafe(GetOwner()));
+		}
+	}
+	else if (OldDeathState == EDeathState::DeathFinished)
+	{
+		if (NewDeathState == EDeathState::ReviveStarted)
+		{
+			StartRevive();
+		}
+		else if (NewDeathState == EDeathState::Alive)
+		{
+			StartRevive();
+			FinishRevive();
+		}
+		else
+		{
+			UE_LOG(LogCrimAbilitySystem, Error, TEXT("HitPointsComponent: Invalid death transition [%d] -> [%d] for owner [%s]."), (uint8)OldDeathState, (uint8)NewDeathState, *GetNameSafe(GetOwner()));
+		}
+	}
+	else if (OldDeathState == EDeathState::ReviveStarted)
+	{
+		if (NewDeathState == EDeathState::Alive)
+		{
+			FinishRevive();
 		}
 		else
 		{

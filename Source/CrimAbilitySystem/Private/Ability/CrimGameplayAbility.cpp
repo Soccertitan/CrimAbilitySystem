@@ -1,4 +1,4 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 
 #include "Ability/CrimGameplayAbility.h"
@@ -222,22 +222,27 @@ void UCrimGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorI
 {
 	Super::OnGiveAbility(ActorInfo, Spec);
 
+	if (ActorInfo && Cast<APawn>(ActorInfo->AvatarActor))
+	{
+		OnPawnAvatarSet();
+	}
+	
 	K2_OnAbilityAdded();
-
 	TryActivateAbilityOnSpawn(ActorInfo, Spec);
 }
 
 void UCrimGameplayAbility::OnRemoveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
 {
-	K2_OnAbilityRemoved();
-	
 	Super::OnRemoveAbility(ActorInfo, Spec);
+	
+	K2_OnAbilityRemoved();
 }
 
 void UCrimGameplayAbility::OnAvatarSet(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
 {
 	Super::OnAvatarSet(ActorInfo, Spec);
-	OnPawnAvatarSet();
+	
+	K2_OnAvatarSet();
 }
 
 void UCrimGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)

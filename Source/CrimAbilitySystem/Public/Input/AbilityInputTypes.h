@@ -1,4 +1,4 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 #pragma once
 
@@ -7,9 +7,9 @@
 #include "Net/Serialization/FastArraySerializer.h"
 #include "AbilityInputTypes.generated.h"
 
+class UGameplayAbilityDefinition;
 class UAbilityInputManagerComponent;
 struct FAbilityInputContainer;
-class UCrimGameplayAbility;
 
 /**
  * Maps an InputTag to an array of abilities.
@@ -19,21 +19,41 @@ struct CRIMABILITYSYSTEM_API FAbilityInputItem : public FFastArraySerializerItem
 {
 	GENERATED_BODY()
 	FAbilityInputItem(){}
-	FAbilityInputItem(const FGameplayTag& InInputTag, TArray<TSoftClassPtr<UCrimGameplayAbility>> Abilities);
+	FAbilityInputItem(const FGameplayTag& InInputTag, TObjectPtr<UGameplayAbilityDefinition> InAbilityDefinition);
 
 	// The InputTag to activate the abilities.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (Categories = "Input"))
 	FGameplayTag InputTag;
 
-	// The array of abilities to activate when the input is pressed.
+	// The AbilityDefinition has the CrimGameplayAbility to activate when the input is pressed.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<TSoftClassPtr<UCrimGameplayAbility>> AbilitiesToActivate;
+	TObjectPtr<UGameplayAbilityDefinition> AbilityDefinition;
 	
 	void PostReplicatedAdd(const FAbilityInputContainer& InArraySerializer);
 	void PostReplicatedChange(const FAbilityInputContainer& InArraySerializer);
 	void PreReplicatedRemove(const FAbilityInputContainer& InArraySerializer);
 
 	bool IsValid() const;
+
+	FORCEINLINE bool operator ==(FGameplayTag const& Other) const
+	{
+		return InputTag == Other;
+	}
+
+	FORCEINLINE bool operator !=(FGameplayTag const& Other) const
+	{
+		return InputTag != Other;
+	}
+
+	FORCEINLINE bool operator==(FAbilityInputItem const& Other) const
+	{
+		return InputTag == Other.InputTag;
+	}
+
+	FORCEINLINE bool operator!=(FAbilityInputItem const& Other) const
+	{
+		return InputTag != Other.InputTag;
+	}
 };
 
 /**
@@ -45,46 +65,28 @@ struct CRIMABILITYSYSTEM_API FAbilityInputContainer : public FFastArraySerialize
 	GENERATED_BODY()
 
 	/**
-	 * Adds an AbilityInputItem to the container, or updates an existing one.
+	 * Adds a new AbilityInputItem to the container, or updates an existing one.
 	 * @param Item The Item to add to the container.
-	 * @param bReplaceAbilities If true, the AbilitiesToActivate is overwritten. If false, the abilities are appended.
 	 */
-	void AddAbilityInputItem(const FAbilityInputItem& Item, bool bReplaceAbilities = true);
+	void AddAbilityInputItem(const FAbilityInputItem& Item);
 
 	/**
-	 * Removes the ability from all InputAbilityItems that don't exist in the InputTags. And Adds the ability to the
-	 * InputAbilityItem with the InputTags.
-	 * @param InputTags The InputTags to add the ability to. And by exclusion removes the ability from all AbilityInputItems
-	 * that do not have the InputTag.
-	 * @param Ability The ability to update.
-	 * @param bReplaceAbilities If true, the AbilitiesToActivate is overwritten. If false, the abilities are appended.
-	 */
-	void UpdateAbilityInputItem(const FGameplayTagContainer& InputTags, TSoftClassPtr<UCrimGameplayAbility> Ability, bool bReplaceAbilities = true);
-
-	/**
-	 * Removes each ability from the InputAbilityItem in the item.
-	 * @param Item The AbilityInputItem that has the abilities you want to remove.
-	 */
-	void RemoveAbilityInputItem(const FAbilityInputItem& Item);
-	/**
-	 * Removes the entire InputAbilityItem from the container.
-	 * @param InputTag The AbilityInputItem to remove entirely.
+	 * Removes the AbilityInputItem with the matching InputTag from the container.
+	 * @param InputTag The tag to search for and remove.
 	 */
 	void RemoveAbilityInputItem(const FGameplayTag& InputTag);
 
-	/**
-	 * Empties out the container of all Inputs.
-	 */
+	/** Gets a const reference of all AbilityInputs in the container. */
+	const TArray<FAbilityInputItem>& GetItems() const;
+
+	/** Empties out the container of all Inputs. */
 	void Reset();
 
 	/**
 	 * @param InputTag The AbilityInputItem to search for.
-	 * @return A copy of the CrimAbilityInputItem.
+	 * @return A copy of the AbilityInputItem.
 	 */
-	FAbilityInputItem GetInputAbilityItem(const FGameplayTag& InputTag) const;
-	
-	// Returns true if the ability exists in the InputTag.
-	bool IsAbilityMappedToInput(const FGameplayTag& InputTag, TSoftClassPtr<UCrimGameplayAbility> Ability) const;
+	FAbilityInputItem FindInputAbilityItem(const FGameplayTag& InputTag) const;
 
 	void RegisterWithOwner(UAbilityInputManagerComponent* Owner);
 
@@ -93,12 +95,15 @@ struct CRIMABILITYSYSTEM_API FAbilityInputContainer : public FFastArraySerialize
 		return FastArrayDeltaSerialize<FAbilityInputItem, FAbilityInputContainer>(Items, DeltaParams, *this);
 	}
 
+private:
 	// Maps InputTags to abilities.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(TitleProperty="InputTag"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(TitleProperty = "InputTag", AllowPrivateAccess = "true"))
 	TArray<FAbilityInputItem> Items;
 
 	UPROPERTY(NotReplicated)
 	TObjectPtr<UAbilityInputManagerComponent> Owner;
+
+	friend struct FAbilityInputItem;
 };
 
 template<>

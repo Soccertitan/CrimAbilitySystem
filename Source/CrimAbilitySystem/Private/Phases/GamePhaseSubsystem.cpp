@@ -1,7 +1,7 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 
-#include "Phases/CrimGamePhaseSubsystem.h"
+#include "Phases/GamePhaseSubsystem.h"
 
 #include "CrimAbilitySystemComponent.h"
 #include "Phases/GamePhaseLog.h"
@@ -14,7 +14,7 @@ UGamePhaseSubsystem::UGamePhaseSubsystem()
 {
 }
 
-void UGamePhaseSubsystem::StartPhase(TSubclassOf<UGamePhaseGameplayAbility> PhaseAbility, FCrimGamePhaseDelegate PhaseEndedCallback)
+void UGamePhaseSubsystem::StartPhase(TSubclassOf<UGamePhaseGameplayAbility> PhaseAbility, FGamePhaseDelegate PhaseEndedCallback)
 {
 	UWorld* World = GetWorld();
 	UCrimAbilitySystemComponent* GameState_ASC = World->GetGameState()->FindComponentByClass<UCrimAbilitySystemComponent>();
@@ -26,7 +26,7 @@ void UGamePhaseSubsystem::StartPhase(TSubclassOf<UGamePhaseGameplayAbility> Phas
 		
 		if (FoundSpec && FoundSpec->IsActive())
 		{
-			FCrimGamePhaseEntry& Entry = ActivePhaseMap.FindOrAdd(SpecHandle);
+			FGamePhaseEntry& Entry = ActivePhaseMap.FindOrAdd(SpecHandle);
 			Entry.PhaseEndedCallback = PhaseEndedCallback;
 		}
 		else
@@ -36,7 +36,7 @@ void UGamePhaseSubsystem::StartPhase(TSubclassOf<UGamePhaseGameplayAbility> Phas
 	}
 }
 
-void UGamePhaseSubsystem::WhenPhaseStartsOrIsActive(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, const FCrimGamePhaseTagDelegate& WhenPhaseActive)
+void UGamePhaseSubsystem::WhenPhaseStartsOrIsActive(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, const FGamePhaseTagDelegate& WhenPhaseActive)
 {
 	FPhaseObserver Observer;
 	Observer.PhaseTag = PhaseTag;
@@ -50,7 +50,7 @@ void UGamePhaseSubsystem::WhenPhaseStartsOrIsActive(FGameplayTag PhaseTag, EPhas
 	}
 }
 
-void UGamePhaseSubsystem::WhenPhaseEnds(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, const FCrimGamePhaseTagDelegate& WhenPhaseEnd)
+void UGamePhaseSubsystem::WhenPhaseEnds(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, const FGamePhaseTagDelegate& WhenPhaseEnd)
 {
 	FPhaseObserver Observer;
 	Observer.PhaseTag = PhaseTag;
@@ -63,7 +63,7 @@ bool UGamePhaseSubsystem::IsPhaseActive(const FGameplayTag& PhaseTag) const
 {
 	for (const auto& KVP : ActivePhaseMap)
 	{
-		const FCrimGamePhaseEntry& PhaseEntry = KVP.Value;
+		const FGamePhaseEntry& PhaseEntry = KVP.Value;
 		if (PhaseEntry.PhaseTag.MatchesTag(PhaseTag))
 		{
 			return true;
@@ -78,9 +78,9 @@ bool UGamePhaseSubsystem::DoesSupportWorldType(const EWorldType::Type WorldType)
 	return WorldType == EWorldType::Game || WorldType == EWorldType::PIE;
 }
 
-void UGamePhaseSubsystem::K2_StartPhase(TSubclassOf<UGamePhaseGameplayAbility> PhaseAbility, const FCrimGamePhaseDynamicDelegate& PhaseEnded)
+void UGamePhaseSubsystem::K2_StartPhase(TSubclassOf<UGamePhaseGameplayAbility> PhaseAbility, const FGamePhaseDynamicDelegate& PhaseEnded)
 {
-	const FCrimGamePhaseDelegate EndedDelegate = FCrimGamePhaseDelegate::CreateWeakLambda(
+	const FGamePhaseDelegate EndedDelegate = FGamePhaseDelegate::CreateWeakLambda(
 		const_cast<UObject*>(PhaseEnded.GetUObject()), [PhaseEnded](const UGamePhaseGameplayAbility* PhaseAbility)
 		{
 			PhaseEnded.ExecuteIfBound(PhaseAbility);
@@ -89,9 +89,9 @@ void UGamePhaseSubsystem::K2_StartPhase(TSubclassOf<UGamePhaseGameplayAbility> P
 	StartPhase(PhaseAbility, EndedDelegate);
 }
 
-void UGamePhaseSubsystem::K2_WhenPhaseStartsOrIsActive(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, FCrimGamePhaseTagDynamicDelegate WhenPhaseActive)
+void UGamePhaseSubsystem::K2_WhenPhaseStartsOrIsActive(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, FGamePhaseTagDynamicDelegate WhenPhaseActive)
 {
-	const FCrimGamePhaseTagDelegate ActiveDelegate = FCrimGamePhaseTagDelegate::CreateWeakLambda(
+	const FGamePhaseTagDelegate ActiveDelegate = FGamePhaseTagDelegate::CreateWeakLambda(
 		WhenPhaseActive.GetUObject(), [WhenPhaseActive](const FGameplayTag& PhaseTag)
 		{
 			WhenPhaseActive.ExecuteIfBound(PhaseTag);
@@ -100,9 +100,9 @@ void UGamePhaseSubsystem::K2_WhenPhaseStartsOrIsActive(FGameplayTag PhaseTag, EP
 	WhenPhaseStartsOrIsActive(PhaseTag, MatchType, ActiveDelegate);
 }
 
-void UGamePhaseSubsystem::K2_WhenPhaseEnds(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, FCrimGamePhaseTagDynamicDelegate WhenPhaseEnd)
+void UGamePhaseSubsystem::K2_WhenPhaseEnds(FGameplayTag PhaseTag, EPhaseTagMatchType MatchType, FGamePhaseTagDynamicDelegate WhenPhaseEnd)
 {
-	const FCrimGamePhaseTagDelegate EndedDelegate = FCrimGamePhaseTagDelegate::CreateWeakLambda(
+	const FGamePhaseTagDelegate EndedDelegate = FGamePhaseTagDelegate::CreateWeakLambda(
 		WhenPhaseEnd.GetUObject(), [WhenPhaseEnd](const FGameplayTag& PhaseTag)
 		{
 			WhenPhaseEnd.ExecuteIfBound(PhaseTag);
@@ -155,7 +155,7 @@ void UGamePhaseSubsystem::OnBeginPhase(const UGamePhaseGameplayAbility* PhaseAbi
 			}
 		}
 
-		FCrimGamePhaseEntry& Entry = ActivePhaseMap.FindOrAdd(PhaseAbilityHandle);
+		FGamePhaseEntry& Entry = ActivePhaseMap.FindOrAdd(PhaseAbilityHandle);
 		Entry.PhaseTag = IncomingPhaseTag;
 
 		// Notify all observers of this phase that it has started.
@@ -174,7 +174,7 @@ void UGamePhaseSubsystem::OnEndPhase(const UGamePhaseGameplayAbility* PhaseAbili
 	const FGameplayTag EndedPhaseTag = PhaseAbility->GetGamePhaseTag();
 	UE_LOG(LogGamePhase, Log, TEXT("Ended Phase '%s' (%s)"), *EndedPhaseTag.ToString(), *GetNameSafe(PhaseAbility));
 
-	const FCrimGamePhaseEntry& Entry = ActivePhaseMap.FindChecked(PhaseAbilityHandle);
+	const FGamePhaseEntry& Entry = ActivePhaseMap.FindChecked(PhaseAbilityHandle);
 	Entry.PhaseEndedCallback.ExecuteIfBound(PhaseAbility);
 
 	ActivePhaseMap.Remove(PhaseAbilityHandle);

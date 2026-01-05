@@ -1,11 +1,9 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 
 #include "AbilitySet.h"
 
 #include "CrimAbilitySystemComponent.h"
-#include "Ability/CrimGameplayAbility.h"
-#include "Attribute/CrimAttributeSet.h"
 
 void FAbilitySet_GameplayAbility::PostSerialize(const FArchive& Ar)
 {
@@ -38,7 +36,7 @@ void FAbilitySet_GrantedHandles::AddGameplayEffectHandle(const FActiveGameplayEf
 	}
 }
 
-void FAbilitySet_GrantedHandles::AddAttributeSet(UCrimAttributeSet* Set)
+void FAbilitySet_GrantedHandles::AddAttributeSet(UAttributeSet* Set)
 {
 	GrantedAttributeSets.Add(Set);
 }
@@ -69,7 +67,7 @@ void FAbilitySet_GrantedHandles::TakeFromAbilitySystem(UCrimAbilitySystemCompone
 		}
 	}
 
-	for (UCrimAttributeSet* Set : GrantedAttributeSets)
+	for (UAttributeSet* Set : GrantedAttributeSets)
 	{
 		AbilitySystemComponent->RemoveSpawnedAttribute(Set);
 	}
@@ -90,7 +88,7 @@ FPrimaryAssetId UAbilitySet::GetPrimaryAssetId() const
 	return FPrimaryAssetId(AssetType, GetFName());
 }
 
-void UAbilitySet::GiveToAbilitySystem(UCrimAbilitySystemComponent* AbilitySystemComponent,
+void UAbilitySet::GiveToAbilitySystem(UAbilitySystemComponent* AbilitySystemComponent,
                                           FAbilitySet_GrantedHandles* OutGrantedHandles, UObject* SourceObject) const
 {
 	check(AbilitySystemComponent);
@@ -112,7 +110,7 @@ void UAbilitySet::GiveToAbilitySystem(UCrimAbilitySystemComponent* AbilitySystem
 			continue;
 		}
 
-		UCrimAttributeSet* NewSet = NewObject<UCrimAttributeSet>(AbilitySystemComponent->GetOwner(), SetToGrant.AttributeSet);
+		UAttributeSet* NewSet = NewObject<UAttributeSet>(AbilitySystemComponent->GetOwner(), SetToGrant.AttributeSet);
 		AbilitySystemComponent->AddAttributeSetSubobject(NewSet);
 
 		if (OutGrantedHandles)
@@ -132,7 +130,7 @@ void UAbilitySet::GiveToAbilitySystem(UCrimAbilitySystemComponent* AbilitySystem
 			continue;
 		}
 
-		UCrimGameplayAbility* AbilityCDO = AbilityToGrant.Ability->GetDefaultObject<UCrimGameplayAbility>();
+		UGameplayAbility* AbilityCDO = AbilityToGrant.Ability->GetDefaultObject<UGameplayAbility>();
 
 		FGameplayAbilitySpec AbilitySpec(AbilityCDO, AbilityToGrant.AbilityLevel);
 		AbilitySpec.SourceObject = SourceObject;

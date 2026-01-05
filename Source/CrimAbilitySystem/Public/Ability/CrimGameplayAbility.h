@@ -1,4 +1,4 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 #pragma once
 
@@ -19,6 +19,9 @@ enum class EAbilityActivationPolicy : uint8
 
 	// Continually tries to activate the ability while the input is active.
 	WhileInputActive,
+	
+	// Tries to activate the ability from an event.
+	OnEvent,
 
 	// Tries to activate the ability when an avatar is assigned. For passive abilities.
 	OnSpawn
@@ -108,6 +111,7 @@ protected:
 	virtual bool DoesAbilitySatisfyTagRequirements(const UAbilitySystemComponent& AbilitySystemComponent, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 	//~End of UGameplayAbility interface
 
+	// Called when the PawnAvatar is set/changes.
 	virtual void OnPawnAvatarSet();
 
 	// virtual void GetAbilitySource(FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, float& OutSourceLevel, const ILyraAbilitySourceInterface*& OutAbilitySource, AActor*& OutEffectCauser) const;
@@ -119,6 +123,10 @@ protected:
 	/** Called when this ability is removed from the ability system component. */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Crim Ability System", DisplayName = "OnAbilityRemoved")
 	void K2_OnAbilityRemoved();
+	
+	/** Called when this ability system is initialized with an avatar. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Crim Ability System", DisplayName = "OnAvatarSet")
+	void K2_OnAvatarSet();
 
 	/** Called when the ability system is initialized with a pawn avatar. */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Crim Ability System", DisplayName = "OnPawnAvatarSet")

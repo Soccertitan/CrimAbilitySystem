@@ -1,4 +1,4 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 #pragma once
 
@@ -10,10 +10,10 @@
 #include "AbilitySet.generated.h"
 
 
-class UCrimAttributeSet;
 class UCrimAbilitySystemComponent;
+class UAttributeSet;
 class UGameplayEffect;
-class UCrimGameplayAbility;
+class UGameplayAbility;
 
 USTRUCT(BlueprintType)
 struct CRIMABILITYSYSTEM_API FAbilitySet_GameplayAbility
@@ -22,7 +22,7 @@ struct CRIMABILITYSYSTEM_API FAbilitySet_GameplayAbility
 
 	// Gameplay ability to grant.
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UCrimGameplayAbility> Ability = nullptr;
+	TSubclassOf<UGameplayAbility> Ability = nullptr;
 
 	// Level of the ability to grant.
 	UPROPERTY(EditDefaultsOnly)
@@ -86,7 +86,7 @@ struct CRIMABILITYSYSTEM_API FAbilitySet_AttributeSet
 
 	// Attribute set to grant.
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UCrimAttributeSet> AttributeSet = nullptr;
+	TSubclassOf<UAttributeSet> AttributeSet = nullptr;
 
 #if WITH_EDITORONLY_DATA
 	// Without an attribute such as VisibleAnywhere the editor TitleProperty code won't be able to find this property.
@@ -112,7 +112,7 @@ struct CRIMABILITYSYSTEM_API FAbilitySet_GrantedHandles
 
 	void AddAbilitySpecHandle(const FGameplayAbilitySpecHandle& Handle);
 	void AddGameplayEffectHandle(const FActiveGameplayEffectHandle& Handle);
-	void AddAttributeSet(UCrimAttributeSet* Set);
+	void AddAttributeSet(UAttributeSet* Set);
 
 	void TakeFromAbilitySystem(UCrimAbilitySystemComponent* AbilitySystemComponent);
 
@@ -128,7 +128,7 @@ protected:
 
 	// Pointers to the granted attribute sets
 	UPROPERTY()
-	TArray<TObjectPtr<UCrimAttributeSet>> GrantedAttributeSets;
+	TArray<TObjectPtr<UAttributeSet>> GrantedAttributeSets;
 };
 
 /**
@@ -150,7 +150,7 @@ public:
 	 * Grants the ability set to the specified ability system component.
 	 * The returned handles can be used later to take away anything that was granted.
 	 */
-	void GiveToAbilitySystem(UCrimAbilitySystemComponent* AbilitySystemComponent, FAbilitySet_GrantedHandles* OutGrantedHandles, UObject* SourceObject = nullptr) const;
+	void GiveToAbilitySystem(UAbilitySystemComponent* AbilitySystemComponent, FAbilitySet_GrantedHandles* OutGrantedHandles, UObject* SourceObject = nullptr) const;
 	
 protected:
 

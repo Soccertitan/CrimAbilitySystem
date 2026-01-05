@@ -1,4 +1,4 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 #pragma once
 
@@ -21,29 +21,29 @@ public:
 	UHitPointsAttributeSet();
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
-	ATTRIBUTE_ACCESSORS(UHitPointsAttributeSet, HitPoints);
-	ATTRIBUTE_ACCESSORS(UHitPointsAttributeSet, MaxHitPoints);
+	ATTRIBUTE_ACCESSORS(UHitPointsAttributeSet, CurrentPoints);
+	ATTRIBUTE_ACCESSORS(UHitPointsAttributeSet, MaxPoints);
 	ATTRIBUTE_ACCESSORS(UHitPointsAttributeSet, Healing);
 	ATTRIBUTE_ACCESSORS(UHitPointsAttributeSet, Damage);
 
-	// Delegate when hit points changes due to damage/healing, some information may be missing on the client
-	mutable FCrimAttributeSignature OnHitPointsUpdatedDelegate;
+	// Delegate when current points changes due to damage/healing, some information may be missing on the client
+	mutable FCrimAttributeSignature OnCurrentPointsUpdatedDelegate;
 
-	// Delegate when max hit points changes
-	mutable FCrimAttributeSignature OnMaxHitPointsUpdatedDelegate;
+	// Delegate when max points changes
+	mutable FCrimAttributeSignature OnMaxPointsUpdatedDelegate;
 
-	// Delegate to broadcast when the HitPoints attribute reaches zero
-	mutable FCrimAttributeSignature OnOutOfHitPointsDelegate;
+	// Delegate to broadcast when the CurrentPoints attribute reaches zero
+	mutable FCrimAttributeSignature OnOutOfCurrentPointsDelegate;
 
-	// Delegate to broadcast when the HitPoints attribute goes from zero to greater than 0.
-	mutable FCrimAttributeSignature OnHitPointsUpdatedFromZeroDelegate;
+	// Delegate to broadcast when the CurrentPoints attribute goes from zero to greater than 0.
+	mutable FCrimAttributeSignature OnCurrentPointsUpdatedFromZeroDelegate;
 
 protected:
 
 	UFUNCTION()
-	void OnRep_HitPoints(const FGameplayAttributeData& OldValue);
+	void OnRep_CurrentPoints(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
-	void OnRep_MaxHitPoints(const FGameplayAttributeData& OldValue);
+	void OnRep_MaxPoints(const FGameplayAttributeData& OldValue);
 
 	virtual bool PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
@@ -62,14 +62,14 @@ private:
 	/**
 	 * The current HitPoints attribute. The value will be capped by the MaxHitPoints attribute.
 	 */
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_HitPoints, Category = "Crim Ability System||HitPoints", Meta = (AllowPrivateAccess = true))
-	FGameplayAttributeData HitPoints;
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentPoints, Category = "Crim Ability System|HitPoints", Meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData CurrentPoints;
 
 	/**
 	 * The current MaxHitPoints attribute. MaxHitPoints is an attribute since gameplay effects can modify it.
 	 */
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxHitPoints, Category = "Crim Ability System||HitPoints", Meta = (AllowPrivateAccess = true))
-	FGameplayAttributeData MaxHitPoints;
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxPoints, Category = "Crim Ability System|HitPoints", Meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData MaxPoints;
 
 	// -------------------------------------------------------------------
 	//	Meta Attribute (please keep attributes that aren't 'stateful' below 
@@ -83,10 +83,10 @@ private:
 	UPROPERTY(BlueprintReadOnly, Category="Crim Ability System||HitPoints", Meta=(AllowPrivateAccess=true))
 	FGameplayAttributeData Damage;
 
-	// Used to track when HitPoints reaches 0.
-	bool bOutOfHitPoints = false;
+	// Used to track when CurrentPoints reaches 0.
+	bool bOutOfCurrentPoints = false;
 	
 	// Store the HitPoints before any changes
-	float HitPointsBeforeAttributeChange = 0.0f;
-	float MaxHitPointsBeforeAttributeChange = 0.0f;
+	float CurrentPointsBeforeAttributeChange = 0.0f;
+	float MaxPointsBeforeAttributeChange = 0.0f;
 };

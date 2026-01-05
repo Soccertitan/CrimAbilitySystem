@@ -1,4 +1,4 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 
 #include "Attribute/HitPointsAttributeSet.h"
@@ -8,7 +8,7 @@
 #include "Net/UnrealNetwork.h"
 
 UHitPointsAttributeSet::UHitPointsAttributeSet()
-	: HitPoints(100.f), MaxHitPoints(100.f)
+	: CurrentPoints(100.f), MaxPoints(100.f)
 {
 }
 
@@ -16,36 +16,36 @@ void UHitPointsAttributeSet::GetLifetimeReplicatedProps(TArray<class FLifetimePr
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(UHitPointsAttributeSet, HitPoints, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(UHitPointsAttributeSet, MaxHitPoints, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UHitPointsAttributeSet, CurrentPoints, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UHitPointsAttributeSet, MaxPoints, COND_None, REPNOTIFY_Always);
 }
 
-void UHitPointsAttributeSet::OnRep_HitPoints(const FGameplayAttributeData& OldValue)
+void UHitPointsAttributeSet::OnRep_CurrentPoints(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UHitPointsAttributeSet, HitPoints, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UHitPointsAttributeSet, CurrentPoints, OldValue);
 
-	const float CurrentHitPoints = GetHitPoints();
+	const float CurrentHitPoints = GetCurrentPoints();
 	const float EstimatedMagnitude = CurrentHitPoints - OldValue.GetCurrentValue();
 
-	OnHitPointsUpdatedDelegate.Broadcast(nullptr, nullptr, nullptr, EstimatedMagnitude, OldValue.GetCurrentValue(), CurrentHitPoints);
+	OnCurrentPointsUpdatedDelegate.Broadcast(nullptr, nullptr, nullptr, EstimatedMagnitude, OldValue.GetCurrentValue(), CurrentHitPoints);
 
-	if (!bOutOfHitPoints && CurrentHitPoints <= 0.0f)
+	if (!bOutOfCurrentPoints && CurrentHitPoints <= 0.0f)
 	{
-		OnOutOfHitPointsDelegate.Broadcast(nullptr, nullptr, nullptr, EstimatedMagnitude, OldValue.GetCurrentValue(), CurrentHitPoints);
+		OnOutOfCurrentPointsDelegate.Broadcast(nullptr, nullptr, nullptr, EstimatedMagnitude, OldValue.GetCurrentValue(), CurrentHitPoints);
 	}
-	else if (bOutOfHitPoints && CurrentHitPoints > 0.0f)
+	else if (bOutOfCurrentPoints && CurrentHitPoints > 0.0f)
 	{
-		OnHitPointsUpdatedFromZeroDelegate.Broadcast(nullptr, nullptr, nullptr, EstimatedMagnitude, OldValue.GetCurrentValue(), CurrentHitPoints);
+		OnCurrentPointsUpdatedFromZeroDelegate.Broadcast(nullptr, nullptr, nullptr, EstimatedMagnitude, OldValue.GetCurrentValue(), CurrentHitPoints);
 	}
 
-	bOutOfHitPoints = CurrentHitPoints <= 0.0f;
+	bOutOfCurrentPoints = CurrentHitPoints <= 0.0f;
 }
 
-void UHitPointsAttributeSet::OnRep_MaxHitPoints(const FGameplayAttributeData& OldValue)
+void UHitPointsAttributeSet::OnRep_MaxPoints(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UHitPointsAttributeSet, MaxHitPoints, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UHitPointsAttributeSet, MaxPoints, OldValue);
 
-	OnMaxHitPointsUpdatedDelegate.Broadcast(nullptr, nullptr, nullptr, GetMaxHitPoints() - OldValue.GetCurrentValue(), OldValue.GetCurrentValue(), GetMaxHitPoints());
+	OnMaxPointsUpdatedDelegate.Broadcast(nullptr, nullptr, nullptr, GetMaxPoints() - OldValue.GetCurrentValue(), OldValue.GetCurrentValue(), GetMaxPoints());
 }
 
 bool UHitPointsAttributeSet::PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data)
@@ -55,8 +55,8 @@ bool UHitPointsAttributeSet::PreGameplayEffectExecute(FGameplayEffectModCallback
 		return false;
 	}
 
-	HitPointsBeforeAttributeChange = GetHitPoints();
-	MaxHitPointsBeforeAttributeChange = GetMaxHitPoints();
+	CurrentPointsBeforeAttributeChange = GetCurrentPoints();
+	MaxPointsBeforeAttributeChange = GetMaxPoints();
 
 	return true;
 }
@@ -69,14 +69,14 @@ void UHitPointsAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModC
 	AActor* Instigator = EffectContext.GetOriginalInstigator();
 	AActor* Causer = EffectContext.GetEffectCauser();
 
-	if (Data.EvaluatedData.Attribute == GetHitPointsAttribute())
+	if (Data.EvaluatedData.Attribute == GetCurrentPointsAttribute())
 	{
-		SetHitPoints(FMath::Clamp(GetHitPoints(), 0.f, GetMaxHitPoints()));
+		SetCurrentPoints(FMath::Clamp(GetCurrentPoints(), 0.f, GetMaxPoints()));
 	}
-	else if (Data.EvaluatedData.Attribute == GetMaxHitPointsAttribute())
+	else if (Data.EvaluatedData.Attribute == GetMaxPointsAttribute())
 	{
-		SetHitPoints(FMath::Clamp(GetHitPoints(), 0.f, GetMaxHitPoints()));
-		OnMaxHitPointsUpdatedDelegate.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, MaxHitPointsBeforeAttributeChange, GetMaxHitPoints());
+		SetCurrentPoints(FMath::Clamp(GetCurrentPoints(), 0.f, GetMaxPoints()));
+		OnMaxPointsUpdatedDelegate.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, MaxPointsBeforeAttributeChange, GetMaxPoints());
 	}
 	else if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
@@ -104,21 +104,21 @@ void UHitPointsAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModC
 	}
 
 	// If HitPoints has actually changed, activate callback
-	if (GetHitPoints() != HitPointsBeforeAttributeChange)
+	if (GetCurrentPoints() != CurrentPointsBeforeAttributeChange)
 	{
-		OnHitPointsUpdatedDelegate.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, HitPointsBeforeAttributeChange, GetHitPoints());
+		OnCurrentPointsUpdatedDelegate.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, CurrentPointsBeforeAttributeChange, GetCurrentPoints());
 	}
 	
-	if (GetHitPoints() <= 0.0f && !bOutOfHitPoints)
+	if (GetCurrentPoints() <= 0.0f && !bOutOfCurrentPoints)
 	{
-		OnOutOfHitPointsDelegate.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, HitPointsBeforeAttributeChange, GetHitPoints());
+		OnOutOfCurrentPointsDelegate.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, CurrentPointsBeforeAttributeChange, GetCurrentPoints());
 	}
-	else if (GetHitPoints() > 0.0f && bOutOfHitPoints)
+	else if (GetCurrentPoints() > 0.0f && bOutOfCurrentPoints)
 	{
-		OnHitPointsUpdatedFromZeroDelegate.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, HitPointsBeforeAttributeChange, GetHitPoints());
+		OnCurrentPointsUpdatedFromZeroDelegate.Broadcast(Instigator, Causer, &Data.EffectSpec, Data.EvaluatedData.Magnitude, CurrentPointsBeforeAttributeChange, GetCurrentPoints());
 	}
 
-	bOutOfHitPoints = GetHitPoints() <= 0.0f;
+	bOutOfCurrentPoints = GetCurrentPoints() <= 0.0f;
 }
 
 void UHitPointsAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
@@ -139,27 +139,27 @@ void UHitPointsAttributeSet::PostAttributeChange(const FGameplayAttribute& Attri
 {
 	Super::PostAttributeChange(Attribute, OldValue, NewValue);
 
-	if (Attribute == GetMaxHitPointsAttribute())
+	if (Attribute == GetMaxPointsAttribute())
 	{
 		// Make sure current HitPoints is not greater than the new MaxHitPoints.
-		if (GetHitPoints() > NewValue)
+		if (GetCurrentPoints() > NewValue)
 		{
 			UCrimAbilitySystemComponent* CrimASC = GetCrimAbilitySystemComponent();
 			check(CrimASC);
 
-			CrimASC->ApplyModToAttribute(GetHitPointsAttribute(), EGameplayModOp::Override, NewValue);
+			CrimASC->ApplyModToAttribute(GetCurrentPointsAttribute(), EGameplayModOp::Override, NewValue);
 		}
 	}
 }
 
 void UHitPointsAttributeSet::ClampAttribute(const FGameplayAttribute& Attribute, float& NewValue) const
 {
-	if (Attribute == GetHitPointsAttribute())
+	if (Attribute == GetCurrentPointsAttribute())
 	{
 		// Do not allow health to go negative or above max health.
-		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxHitPoints());
+		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxPoints());
 	}
-	else if (Attribute == GetMaxHitPointsAttribute())
+	else if (Attribute == GetMaxPointsAttribute())
 	{
 		// Do not allow max health to drop below 1.
 		NewValue = FMath::Max(NewValue, 1.0f);
@@ -170,12 +170,12 @@ void UHitPointsAttributeSet::HandleDamage(const FGameplayEffectModCallbackData& 
 {
 	const float LocalDamage = FMath::Abs(Magnitude);
 
-	SetHitPoints(FMath::Clamp(GetHitPoints() - LocalDamage, 0.f, GetMaxHitPoints()));
+	SetCurrentPoints(FMath::Clamp(GetCurrentPoints() - LocalDamage, 0.f, GetMaxPoints()));
 }
 
 void UHitPointsAttributeSet::HandleHealing(const FGameplayEffectModCallbackData& Data, float Magnitude)
 {
 	const float LocalHealing = FMath::Abs(Magnitude);
 
-	SetHitPoints(FMath::Clamp(GetHitPoints() + LocalHealing, 0.f, GetMaxHitPoints()));
+	SetCurrentPoints(FMath::Clamp(GetCurrentPoints() + LocalHealing, 0.f, GetMaxPoints()));
 }

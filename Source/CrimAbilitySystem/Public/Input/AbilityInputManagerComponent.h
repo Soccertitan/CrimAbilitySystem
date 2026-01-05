@@ -1,4 +1,4 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 #pragma once
 
@@ -45,6 +45,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
 	void InputTagReleased(const FGameplayTag& InputTag);
 
+	/** Clears all inputs from the queue from being processed. */
+	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
+	void ReleaseAbilityInput();
+
 	/**
 	 * Processes all inputs that were pressed and released this frame. Activating abilities, sending InputPressed events,
 	 * and InputReleased events.
@@ -55,57 +59,53 @@ public:
 	/**
 	 * Adds an AbilityInputItem to the container, or updates an existing one.
 	 * @param Item The Item to add to the container.
-	 * @param bReplaceAbilities If true, the AbilitiesToActivate is overwritten. If false, the abilities are appended.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void AddAbilityInputItem(const FAbilityInputItem& Item, bool bReplaceAbilities = true);
+	void AddAbilityInputItem(UPARAM(ref) const FAbilityInputItem& Item);
 
 	/**
-	 * Removes the ability from all InputAbilityItems that don't exist in the InputTags. And Adds the ability to the
-	 * InputAbilityItem with the InputTags.
-	 * @param InputTags The InputTags to add the ability to. And by exclusion removes the ability from all AbilityInputItems
-	 * that do not have the InputTag.
-	 * @param Ability The ability to update.
-	 * @param bReplaceAbilities If true, the AbilitiesToActivate is overwritten. If false, the abilities are appended.
+	 * Adds an array of AbilityInputItem to the container, or updates an existing one.
+	 * @param Items The Items to add to the container.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void UpdateAbilityInputItem(const FGameplayTagContainer& InputTags, TSoftClassPtr<UCrimGameplayAbility> Ability, bool bReplaceAbilities = true);
+	void AddAbilityInputItems(UPARAM(ref) const TArray<FAbilityInputItem>& Items);
 
 	/**
-	 * Removes each ability from the InputAbilityItem in the item.
-	 * @param Item The AbilityInputItem that has the abilities you want to remove.
+	 * Removes the AbilityInputItem from the container with the matching InputTag.
+	 * @param InputTag The InputTag to search for.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void RemoveAbilityInputItem(const FAbilityInputItem& Item);
-	/**
-	 * Removes the entire InputAbilityItem from the container.
-	 * @param InputTag The AbilityInputItem to remove entirely.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void RemoveAbilityInputItemByTag(const FGameplayTag& InputTag);
+	void RemoveAbilityInputItem(UPARAM(ref) const FGameplayTag& InputTag);
 
 	/**
-	 * Empties out the container of all Inputs.
+	 * Removes each AbilityInputItem from the container with matching InputTags.
+	 * @param InputTags The InputTags to search for.
 	 */
+	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
+	void RemoveAbilityInputItems(UPARAM(ref) const TArray<FGameplayTag>& InputTags);
+
+	/** Removes all AbilityInputItems with the matching InputTags from the AbilityInputItem. */
+	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
+	void RemoveAbilityInputItemsByAbilityInputItem(UPARAM(ref) const TArray<FAbilityInputItem>& Items);
+
+	/** Empties out the container of all Inputs. */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
 	void ResetAbilityInputContainer();
 
-	/**
-	 * Resets the AbilityInputContainer to default settings.
-	 */
+	/** Resets the AbilityInputContainer to default settings. */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
 	void ResetAbilityInputContainerToDefaults();
 
+	/** Returns a copy of the AbilityInputItems */
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Crim Ability System|Input")
+	TArray<FAbilityInputItem> GetAbilityInputItems() const;
+	
 	/**
 	 * @param InputTag The AbilityInputItem to search for.
 	 * @return A copy of the CrimAbilityInputItem.
 	 */
 	UFUNCTION(BlueprintPure, Category = "Crim Ability System|Input")
-	FAbilityInputItem GetInputAbilityItem(const FGameplayTag& InputTag) const;
-	
-	// Returns true if the ability exists in the InputTag.
-	UFUNCTION(BlueprintPure, Category = "Crim Ability System|Input")
-	bool IsAbilityMappedToInput(const FGameplayTag& InputTag, TSoftClassPtr<UCrimGameplayAbility> Ability) const;
+	FAbilityInputItem GetAbilityInputItem(const FGameplayTag& InputTag) const;
 
 	virtual void OnAbilityInputAdded(const FAbilityInputItem& Item);
 	virtual void OnAbilityInputChanged(const FAbilityInputItem& Item);
@@ -134,12 +134,10 @@ private:
 	UPROPERTY(Replicated)
 	FAbilityInputContainer AbilityInputContainer;
 
-	/**
-	 * On BeginPlay sets the default abilities to be mapped to the AbilityInputContainer.
-	 */
+	/** The default abilities to be mapped to the AbilityInputContainer on BeginPlay. */
 	UPROPERTY(EditAnywhere, Category = "Input")
 	FAbilityInputContainer DefaultAbilityInputContainer;
-	// If true, resets the AbilityInputContainer before applying the DefaultAbilityInputContainer.
+	/** If true, will clear out the Container first before applying the DefaultAbilityInputContainer on BeginPlay. */
 	UPROPERTY(EditAnywhere, Category = "Input")
 	bool bStartupOverrideAbilityInputs = false;
 
@@ -153,6 +151,24 @@ private:
 	// Handles to abilities that have their input held mapped to an InputTag.
 	TArray<FGameplayAbilitySpecHandle> InputHeldSpecHandles;
 
-	/** Clears all inputs from the queue from being processed. */
-	void ClearAbilityInput();
+	UFUNCTION(Server, Reliable)
+	void Server_AddAbilityInputItem(const FAbilityInputItem& Item);
+
+	UFUNCTION(Server, Reliable)
+	void Server_AddAbilityInputItems(const TArray<FAbilityInputItem>& Items);
+
+	UFUNCTION(Server, Reliable)
+	void Server_RemoveAbilityInputItem(const FGameplayTag& InputTag);
+
+	UFUNCTION(Server, Reliable)
+	void Server_RemoveAbilityInputItems(const TArray<FGameplayTag>& InputTags);
+
+	UFUNCTION(Server, Reliable)
+	void Server_RemoveAbilityInputItemsByAbilityInputItem(const TArray<FAbilityInputItem>& Items);
+
+	UFUNCTION(Server, Reliable)
+	void Server_ResetAbilityInputContainer();
+
+	UFUNCTION(Server, Reliable)
+	void Server_ResetAbilityInputContainerToDefaults();
 };

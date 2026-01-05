@@ -1,4 +1,4 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 #pragma once
 
@@ -7,7 +7,8 @@
 #include "UObject/Object.h"
 #include "AbilityCost.generated.h"
 
-class UCrimGameplayAbility;
+class UGameplayAbility;
+
 /**
  * Base class for costs that a CrimGameplayAbility has (e.g., charges, attributes)
  */
@@ -29,7 +30,7 @@ public:
 	 * 
 	 * @return true if we can pay for the ability, false otherwise.
 	 */
-	virtual bool CheckCost(const UCrimGameplayAbility* Ability, const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags) const
+	virtual bool CheckCost(const UGameplayAbility* Ability, const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags) const
 	{
 		return true;
 	}
@@ -41,7 +42,7 @@ public:
 	 * - Your implementation does not need to check ShouldOnlyApplyCostOnHit(), the caller does that for you.
 	 * - Ability and ActorInfo are guaranteed to be non-null on entry.
 	 */
-	virtual void ApplyCost(const UCrimGameplayAbility* Ability, const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
+	virtual void ApplyCost(const UGameplayAbility* Ability, const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 	{
 	}
 

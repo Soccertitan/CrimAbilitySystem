@@ -1,4 +1,4 @@
-﻿// Copyright Soccertitan
+﻿// Copyright Soccertitan 2025
 
 
 #include "Ability/DeathGameplayAbility.h"
@@ -18,6 +18,7 @@ UDeathGameplayAbility::UDeathGameplayAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerInitiated;
+	ActivationPolicy = EAbilityActivationPolicy::OnEvent;
 
 	if (HasAnyFlags(RF_ClassDefaultObject))
 	{
@@ -42,11 +43,6 @@ void UDeathGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	// CrimASC->CancelAbilities(nullptr, &AbilityTypesToIgnore, this);
 
 	SetCanBeCanceled(false);
-
-	if (!ChangeActivationGroup(EAbilityActivationGroup::Exclusive_Blocking))
-	{
-		UE_LOG(LogCrimAbilitySystem, Error, TEXT("UDeathGameplayAbility::ActivateAbility: Ability [%s] failed to change activation group to blocking."), *GetName());
-	}
 
 	if (bAutoStartDeath)
 	{
