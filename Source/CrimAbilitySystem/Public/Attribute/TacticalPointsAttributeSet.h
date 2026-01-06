@@ -14,7 +14,8 @@ UCLASS()
 class CRIMABILITYSYSTEM_API UTacticalPointsAttributeSet : public UCrimAttributeSet
 {
 	GENERATED_BODY()
-	public:
+
+public:
 
 	UTacticalPointsAttributeSet();
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
