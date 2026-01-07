@@ -76,11 +76,11 @@ private:
 	// -------------------------------------------------------------------
 
 	// Incoming healing. This is mapped directly to +Health
-	UPROPERTY(BlueprintReadOnly, Category="Crim Ability System||HitPoints", Meta=(AllowPrivateAccess=true))
+	UPROPERTY(BlueprintReadOnly, Category="Crim Ability System|HitPoints", Meta=(AllowPrivateAccess=true))
 	FGameplayAttributeData Healing;
 
 	// Incoming damage. This is mapped directly to -Health
-	UPROPERTY(BlueprintReadOnly, Category="Crim Ability System||HitPoints", Meta=(AllowPrivateAccess=true))
+	UPROPERTY(BlueprintReadOnly, Category="Crim Ability System|HitPoints", Meta=(AllowPrivateAccess=true))
 	FGameplayAttributeData Damage;
 
 	// Used to track when CurrentPoints reaches 0.
