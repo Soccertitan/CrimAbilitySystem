@@ -6,6 +6,7 @@
 #include "CrimAbilityLogChannels.h"
 #include "CrimAbilitySystemComponent.h"
 #include "AbilityGameplayTags.h"
+#include "GameplayEffectExtension.h"
 #include "Attribute/HitPointsAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 
@@ -19,7 +20,12 @@ UHitPointsComponent::UHitPointsComponent()
 void UHitPointsComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(UHitPointsComponent, DeathState);
+	
+	FDoRepLifetimeParams Params;
+	Params.bIsPushBased = true;
+	Params.Condition = COND_None;
+	
+	DOREPLIFETIME_WITH_PARAMS_FAST(UHitPointsComponent, DeathState, Params);
 }
 
 UHitPointsComponent* UHitPointsComponent::FindHitPointsComponent(const AActor* Actor)
@@ -44,23 +50,9 @@ void UHitPointsComponent::InitializeWithAbilitySystem_Implementation(UCrimAbilit
 		UE_LOG(LogCrimAbilitySystem, Error, TEXT("HitPointsComponent: Cannot initialize health component for owner [%s] with NULL ability system."), *GetNameSafe(Owner));
 		return;
 	}
-
-	HitPointsSet = AbilitySystemComponent->GetSet<UHitPointsAttributeSet>();
-	if (!HitPointsSet)
-	{
-		UE_LOG(LogCrimAbilitySystem, Warning, TEXT("HitPointsComponent: Cannot initialize health component for owner [%s] with NULL HitPointsAttributeSet on the ability system."), *GetNameSafe(Owner));
-		AbilitySystemComponent = nullptr;
-		return;
-	}
-
-	// Register to listen for attribute changes.
-	HitPointsSet->OnCurrentPointsUpdatedDelegate.AddUObject(this, &ThisClass::OnHitPointsUpdated);
-	HitPointsSet->OnMaxPointsUpdatedDelegate.AddUObject(this, &ThisClass::OnMaxHitPointsUpdated);
-	HitPointsSet->OnOutOfCurrentPointsDelegate.AddUObject(this, &ThisClass::OnOutOfHitPoints);
-	HitPointsSet->OnCurrentPointsUpdatedFromZeroDelegate.AddUObject(this, &ThisClass::OnHitPointsUpdatedFromZero);
-
-	OnHitPointsUpdatedDelegate.Broadcast(this, HitPointsSet->GetCurrentPoints(), HitPointsSet->GetCurrentPoints(), nullptr);
-	OnMaxHitPointsUpdatedDelegate.Broadcast(this, HitPointsSet->GetMaxPoints(), HitPointsSet->GetMaxPoints(), nullptr);
+	
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UHitPointsAttributeSet::GetCurrentPointsAttribute()).AddUObject(this, &UHitPointsComponent::OnHitPointsUpdated);
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UHitPointsAttributeSet::GetMaxPointsAttribute()).AddUObject(this, &UHitPointsComponent::OnMaxHitPointsUpdated);
 	
 	UE_LOG(LogCrimAbilitySystem, Log, TEXT("HitPointsComponent: has been initialized for owner [%s]."), *GetNameSafe(Owner));
 }
@@ -69,30 +61,27 @@ void UHitPointsComponent::UninitializeFromAbilitySystem()
 {
 	ClearGameplayTags();
 
-	if (HitPointsSet)
+	if (AbilitySystemComponent)
 	{
-		HitPointsSet->OnCurrentPointsUpdatedDelegate.RemoveAll(this);
-		HitPointsSet->OnMaxPointsUpdatedDelegate.RemoveAll(this);
-		HitPointsSet->OnOutOfCurrentPointsDelegate.RemoveAll(this);
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UHitPointsAttributeSet::GetCurrentPointsAttribute()).RemoveAll(this);
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UHitPointsAttributeSet::GetMaxPointsAttribute()).RemoveAll(this);
+		AbilitySystemComponent = nullptr;
 	}
-
-	HitPointsSet = nullptr;
-	AbilitySystemComponent = nullptr;
 }
 
 float UHitPointsComponent::GetHitPoints() const
 {
-	return HitPointsSet ? HitPointsSet->GetCurrentPoints() : 0;
+	return AbilitySystemComponent ? AbilitySystemComponent->GetNumericAttribute(UHitPointsAttributeSet::GetCurrentPointsAttribute()) : 0;
 }
 
 float UHitPointsComponent::GetMaxHitPoints() const
 {
-	return HitPointsSet ? HitPointsSet->GetMaxPoints() : 0;
+	return AbilitySystemComponent ? AbilitySystemComponent->GetNumericAttribute(UHitPointsAttributeSet::GetMaxPointsAttribute()) : 0;
 }
 
 float UHitPointsComponent::GetHitPointsNormalized() const
 {
-	if (HitPointsSet)
+	if (AbilitySystemComponent)
 	{
 		const float HitPoints = GetHitPoints();
 		const float MaxHitPoints = GetMaxHitPoints();
@@ -127,8 +116,7 @@ void UHitPointsComponent::StartDeath()
 	check(Owner);
 
 	OnDeathStartedDelegate.Broadcast(Owner);
-
-	Owner->ForceNetUpdate();
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, DeathState, this);
 }
 
 void UHitPointsComponent::FinishDeath()
@@ -147,7 +135,7 @@ void UHitPointsComponent::FinishDeath()
 
 	OnDeathFinishedDelegate.Broadcast(Owner);
 
-	Owner->ForceNetUpdate();
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, DeathState, this);
 }
 
 void UHitPointsComponent::StartRevive()
@@ -166,7 +154,7 @@ void UHitPointsComponent::StartRevive()
 
 	OnReviveStartedDelegate.Broadcast(Owner);
 
-	Owner->ForceNetUpdate();
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, DeathState, this);
 }
 
 void UHitPointsComponent::FinishRevive()
@@ -185,7 +173,7 @@ void UHitPointsComponent::FinishRevive()
 
 	OnReviveFinishedDelegate.Broadcast(Owner);
 
-	Owner->ForceNetUpdate();
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, DeathState, this);
 }
 
 void UHitPointsComponent::OnUnregister()
@@ -204,64 +192,77 @@ void UHitPointsComponent::ClearGameplayTags()
 	}
 }
 
-void UHitPointsComponent::OnHitPointsUpdated(AActor* DamageInstigator, AActor* DamageCauser,
-	const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
+void UHitPointsComponent::OnHitPointsUpdated(const FOnAttributeChangeData& Data)
 {
-	OnHitPointsUpdatedDelegate.Broadcast(this, OldValue, NewValue, DamageInstigator);
+	OnHitPointsUpdatedDelegate.Broadcast(this, Data.OldValue, Data.NewValue, Data.GEModData->EffectSpec.GetEffectContext().Get()->GetInstigator());
+	
+	if (Data.NewValue <= 0.f && Data.OldValue > 0.f)
+	{
+		// I just died!
+		const FGameplayEffectContext* Spec = Data.GEModData->EffectSpec.GetEffectContext().Get();
+		AActor* Instigator = Spec ? Spec->GetOriginalInstigator() : nullptr;
+		const FGameplayEffectSpec& EffectSpec = Data.GEModData->EffectSpec;
+		const float Magnitude = Data.GEModData->EvaluatedData.Magnitude;
+		OnOutOfHitPoints(Instigator, EffectSpec, Magnitude);
+	}
+	
+	if (Data.OldValue <= 0.f && Data.NewValue > 0.f)
+	{
+		// I am alive now.
+		const FGameplayEffectContext* Spec = Data.GEModData->EffectSpec.GetEffectContext().Get();
+		AActor* Instigator = Spec ? Spec->GetOriginalInstigator() : nullptr;
+		const FGameplayEffectSpec& EffectSpec = Data.GEModData->EffectSpec;
+		const float Magnitude = Data.GEModData->EvaluatedData.Magnitude;
+		// const float Magnitude = Data.GEModData ? Data.GEModData->EvaluatedData.Magnitude : FMath::Abs(Data.NewValue - Data.OldValue);
+		OnHitPointsUpdatedFromZero(Instigator, EffectSpec, Magnitude);
+	}
 }
 
-void UHitPointsComponent::OnMaxHitPointsUpdated(AActor* DamageInstigator, AActor* DamageCauser,
-	const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
+void UHitPointsComponent::OnMaxHitPointsUpdated(const FOnAttributeChangeData& Data)
 {
-	OnMaxHitPointsUpdatedDelegate.Broadcast(this, OldValue, NewValue, DamageInstigator);
+	OnMaxHitPointsUpdatedDelegate.Broadcast(this, Data.OldValue, Data.NewValue, Data.GEModData->EffectSpec.GetEffectContext().Get()->GetInstigator());
 }
 
-void UHitPointsComponent::OnOutOfHitPoints(AActor* DamageInstigator, AActor* DamageCauser,
-	const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue)
+void UHitPointsComponent::OnOutOfHitPoints(AActor* Instigator, const FGameplayEffectSpec& EffectSpec, float Magnitude)
 {
 #if WITH_SERVER_CODE
-	if (AbilitySystemComponent && DamageEffectSpec)
+	if (AbilitySystemComponent)
 	{
 		// Send the "GameplayEvent.Death" gameplay event through the owner's ability system.  This can be used to trigger a death gameplay ability.
-		{
-			FGameplayEventData Payload;
-			Payload.EventTag = FAbilityGameplayTags::Get().Ability_GameplayEvent_Death;
-			Payload.Instigator = DamageInstigator;
-			Payload.Target = AbilitySystemComponent->GetAvatarActor();
-			Payload.OptionalObject = DamageEffectSpec->Def;
-			Payload.ContextHandle = DamageEffectSpec->GetEffectContext();
-			Payload.InstigatorTags = *DamageEffectSpec->CapturedSourceTags.GetAggregatedTags();
-			Payload.TargetTags = *DamageEffectSpec->CapturedTargetTags.GetAggregatedTags();
-			Payload.EventMagnitude = DamageMagnitude;
+		FGameplayEventData Payload;
+		Payload.EventTag = FAbilityGameplayTags::Get().Ability_GameplayEvent_Death;
+		Payload.Instigator = Instigator;
+		Payload.Target = AbilitySystemComponent->GetOwnerActor();
+		Payload.OptionalObject = EffectSpec.Def;
+		Payload.ContextHandle = EffectSpec.GetEffectContext();
+		Payload.InstigatorTags = *EffectSpec.CapturedSourceTags.GetAggregatedTags();
+		Payload.TargetTags = *EffectSpec.CapturedTargetTags.GetAggregatedTags();
+		Payload.EventMagnitude = Magnitude;
 
-			FScopedPredictionWindow NewScopedWindow(AbilitySystemComponent, true);
-			AbilitySystemComponent->HandleGameplayEvent(Payload.EventTag, &Payload);
-		}
+		FScopedPredictionWindow NewScopedWindow(AbilitySystemComponent, true);
+		AbilitySystemComponent->HandleGameplayEvent(Payload.EventTag, &Payload);
 	}
 #endif // #if WITH_SERVER_CODE
 }
 
-void UHitPointsComponent::OnHitPointsUpdatedFromZero(AActor* RestoreInstigator, AActor* RestoreCauser,
-	const FGameplayEffectSpec* RestoreEffectSpec, float RestoreMagnitude, float OldValue, float NewValue)
+void UHitPointsComponent::OnHitPointsUpdatedFromZero(AActor* Instigator, const FGameplayEffectSpec& EffectSpec, float Magnitude)
 {
 #if WITH_SERVER_CODE
-	if (AbilitySystemComponent && RestoreEffectSpec)
+	if (AbilitySystemComponent)
 	{
 		// Send the "GameplayEvent.Resurrection" gameplay event through the owner's ability system.  This can be used to trigger a resurrection gameplay ability.
-		{
-			FGameplayEventData Payload;
-			Payload.EventTag = FAbilityGameplayTags::Get().Ability_GameplayEvent_Revive;
-			Payload.Instigator = RestoreInstigator;
-			Payload.Target = AbilitySystemComponent->GetAvatarActor();
-			Payload.OptionalObject = RestoreEffectSpec->Def;
-			Payload.ContextHandle = RestoreEffectSpec->GetEffectContext();
-			Payload.InstigatorTags = *RestoreEffectSpec->CapturedSourceTags.GetAggregatedTags();
-			Payload.TargetTags = *RestoreEffectSpec->CapturedTargetTags.GetAggregatedTags();
-			Payload.EventMagnitude = RestoreMagnitude;
+		FGameplayEventData Payload;
+		Payload.EventTag = FAbilityGameplayTags::Get().Ability_GameplayEvent_Revive;
+		Payload.Instigator = Instigator;
+		Payload.Target = AbilitySystemComponent->GetOwnerActor();
+		Payload.OptionalObject = EffectSpec.Def;
+		Payload.ContextHandle = EffectSpec.GetEffectContext();
+		Payload.InstigatorTags = *EffectSpec.CapturedSourceTags.GetAggregatedTags();
+		Payload.TargetTags = *EffectSpec.CapturedTargetTags.GetAggregatedTags();
+		Payload.EventMagnitude = Magnitude;
 
-			FScopedPredictionWindow NewScopedWindow(AbilitySystemComponent, true);
-			AbilitySystemComponent->HandleGameplayEvent(Payload.EventTag, &Payload);
-		}
+		FScopedPredictionWindow NewScopedWindow(AbilitySystemComponent, true);
+		AbilitySystemComponent->HandleGameplayEvent(Payload.EventTag, &Payload);
 	}
 #endif // #if WITH_SERVER_CODE
 }

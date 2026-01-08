@@ -7,6 +7,7 @@
 #include "Components/ActorComponent.h"
 #include "HitPointsComponent.generated.h"
 
+struct FOnAttributeChangeData;
 struct FGameplayEffectSpec;
 class UCrimAbilitySystemComponent;
 class UHitPointsAttributeSet;
@@ -117,10 +118,10 @@ protected:
 
 	void ClearGameplayTags();
 
-	virtual void OnHitPointsUpdated(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
-	virtual void OnMaxHitPointsUpdated(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
-	virtual void OnOutOfHitPoints(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayEffectSpec* DamageEffectSpec, float DamageMagnitude, float OldValue, float NewValue);
-	virtual void OnHitPointsUpdatedFromZero(AActor* RestoreInstigator, AActor* RestoreCauser, const FGameplayEffectSpec* RestoreEffectSpec, float RestoreMagnitude, float OldValue, float NewValue);
+	virtual void OnHitPointsUpdated(const FOnAttributeChangeData& Data);
+	virtual void OnMaxHitPointsUpdated(const FOnAttributeChangeData& Data);
+	virtual void OnOutOfHitPoints(AActor* Instigator, const FGameplayEffectSpec& EffectSpec, float Magnitude);
+	virtual void OnHitPointsUpdatedFromZero(AActor* Instigator, const FGameplayEffectSpec& EffectSpec, float Magnitude);
 
 	UFUNCTION()
 	virtual void OnRep_DeathState(EDeathState OldDeathState);
@@ -129,10 +130,6 @@ private:
 	// Ability system used by this component.
 	UPROPERTY()
 	TObjectPtr<UCrimAbilitySystemComponent> AbilitySystemComponent;
-
-	// Hit Points set used by this component.
-	UPROPERTY()
-	TObjectPtr<const UHitPointsAttributeSet> HitPointsSet;
 
 	// Replicated state used to handle dying.
 	UPROPERTY(ReplicatedUsing = OnRep_DeathState)

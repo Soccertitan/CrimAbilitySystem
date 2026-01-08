@@ -4,26 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
-#include "CrimAttributeSet.h"
-#include "TacticalPointsAttributeSet.generated.h"
+#include "CrimAttributeSetBase.h"
+#include "ResourcePointsAttributeSet.generated.h"
 
 /**
- * Class that defines attributes that are necessary for activating abilities. Like mana, action points, etc.
+ * Attributes that are necessary for activating abilities. Like mana, action points, etc.
  */
 UCLASS()
-class CRIMABILITYSYSTEM_API UTacticalPointsAttributeSet : public UCrimAttributeSet
+class CRIMABILITYSYSTEM_API UResourcePointsAttributeSet : public UCrimAttributeSetBase
 {
 	GENERATED_BODY()
 
 public:
-
-	UTacticalPointsAttributeSet();
+	UResourcePointsAttributeSet();
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
-	ATTRIBUTE_ACCESSORS(UTacticalPointsAttributeSet, CurrentPoints);
-	ATTRIBUTE_ACCESSORS(UTacticalPointsAttributeSet, MaxPoints);
-	ATTRIBUTE_ACCESSORS(UTacticalPointsAttributeSet, Healing);
-	ATTRIBUTE_ACCESSORS(UTacticalPointsAttributeSet, Damage);
+	ATTRIBUTE_ACCESSORS(UResourcePointsAttributeSet, CurrentPoints);
+	ATTRIBUTE_ACCESSORS(UResourcePointsAttributeSet, MaxPoints);
+	ATTRIBUTE_ACCESSORS(UResourcePointsAttributeSet, Healing);
+	ATTRIBUTE_ACCESSORS(UResourcePointsAttributeSet, Damage);
 
 protected:
 
@@ -34,12 +33,9 @@ protected:
 
 	virtual bool PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
-
-	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
-	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
-	void ClampAttribute(const FGameplayAttribute& Attribute, float& NewValue) const;
+	virtual void ClampAttributes(const FGameplayAttribute& Attribute, float& NewValue) const override;
 
 	virtual void HandleDamage(const FGameplayEffectModCallbackData& Data, float Magnitude);
 	virtual void HandleHealing(const FGameplayEffectModCallbackData& Data, float Magnitude);
@@ -49,13 +45,13 @@ private:
 	/**
 	 * The current TacticalPoints attribute. The value will be capped by the MaxTacticalPoints attribute.
 	 */
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentPoints, Category = "Crim|TacticalPoints", Meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentPoints, Category = "Resource Attribute Set", Meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData CurrentPoints;
 
 	/**
 	 * The current MaxTacticalPoints attribute. MaxTacticalPoints is an attribute since gameplay effects can modify it.
 	 */
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxPoints, Category = "Crim|TacticalPoints", Meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxPoints, Category = "Resource Attribute Set", Meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData MaxPoints;
 
 	// -------------------------------------------------------------------
@@ -63,10 +59,10 @@ private:
 	// -------------------------------------------------------------------
 
 	// Incoming healing. This is mapped directly to +CurrentPoints
-	UPROPERTY(BlueprintReadOnly, Category="Crim|TacticalPoints", Meta=(AllowPrivateAccess=true))
+	UPROPERTY(BlueprintReadOnly, Category="Resource Attribute Set", Meta=(AllowPrivateAccess=true))
 	FGameplayAttributeData Healing;
 
 	// Incoming damage. This is mapped directly to -CurrentPoints
-	UPROPERTY(BlueprintReadOnly, Category="Crim|TacticalPoints", Meta=(AllowPrivateAccess=true))
+	UPROPERTY(BlueprintReadOnly, Category="Resource Attribute Set", Meta=(AllowPrivateAccess=true))
 	FGameplayAttributeData Damage;
 };
