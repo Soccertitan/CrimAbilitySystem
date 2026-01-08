@@ -222,11 +222,6 @@ void UCrimGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorI
 {
 	Super::OnGiveAbility(ActorInfo, Spec);
 
-	if (ActorInfo && Cast<APawn>(ActorInfo->AvatarActor))
-	{
-		OnPawnAvatarSet();
-	}
-	
 	K2_OnAbilityAdded();
 	TryActivateAbilityOnSpawn(ActorInfo, Spec);
 }
@@ -499,11 +494,6 @@ bool UCrimGameplayAbility::DoesAbilitySatisfyTagRequirements(const UAbilitySyste
 	}
 
 	return true;
-}
-
-void UCrimGameplayAbility::OnPawnAvatarSet()
-{
-	K2_OnPawnAvatarSet();
 }
 
 float UCrimGameplayAbility::GetCooldown_Implementation() const

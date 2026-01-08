@@ -111,9 +111,6 @@ protected:
 	virtual bool DoesAbilitySatisfyTagRequirements(const UAbilitySystemComponent& AbilitySystemComponent, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 	//~End of UGameplayAbility interface
 
-	// Called when the PawnAvatar is set/changes.
-	virtual void OnPawnAvatarSet();
-
 	// virtual void GetAbilitySource(FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, float& OutSourceLevel, const ILyraAbilitySourceInterface*& OutAbilitySource, AActor*& OutEffectCauser) const;
 
 	/** Called when this ability is granted to the ability system component. */
@@ -127,10 +124,6 @@ protected:
 	/** Called when this ability system is initialized with an avatar. */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Crim Ability System", DisplayName = "OnAvatarSet")
 	void K2_OnAvatarSet();
-
-	/** Called when the ability system is initialized with a pawn avatar. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Crim Ability System", DisplayName = "OnPawnAvatarSet")
-	void K2_OnPawnAvatarSet();
 
 protected:
 

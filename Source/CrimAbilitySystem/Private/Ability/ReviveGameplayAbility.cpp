@@ -48,7 +48,7 @@ void UReviveGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 	{
 		StartRevive();
 	}
-	
+
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 }
 
@@ -65,22 +65,44 @@ void UReviveGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle,
 
 void UReviveGameplayAbility::StartRevive()
 {
-	if (UHitPointsComponent* HitPointsComponent = UHitPointsComponent::FindHitPointsComponent(GetAvatarActorFromActorInfo()))
+	if (UHitPointsComponent* HitPointsComponent = UHitPointsComponent::FindHitPointsComponent(GetOwningActorFromActorInfo()))
 	{
 		if (HitPointsComponent->IsDeadOrDying())
 		{
 			HitPointsComponent->StartRevive();
 		}
 	}
+
+	if (GetOwningActorFromActorInfo() != GetAvatarActorFromActorInfo())
+	{
+		if (UHitPointsComponent* HitPointsComponent = UHitPointsComponent::FindHitPointsComponent(GetAvatarActorFromActorInfo()))
+		{
+			if (HitPointsComponent->IsDeadOrDying())
+			{
+				HitPointsComponent->StartRevive();
+			}
+		}
+	}
 }
 
 void UReviveGameplayAbility::FinishRevive()
 {
-	if (UHitPointsComponent* HitPointsComponent = UHitPointsComponent::FindHitPointsComponent(GetAvatarActorFromActorInfo()))
+	if (UHitPointsComponent* HitPointsComponent = UHitPointsComponent::FindHitPointsComponent(GetOwningActorFromActorInfo()))
 	{
 		if (HitPointsComponent->GetDeathState() == EDeathState::ReviveStarted)
 		{
 			HitPointsComponent->FinishRevive();
+		}
+	}
+
+	if (GetOwningActorFromActorInfo() != GetAvatarActorFromActorInfo())
+	{
+		if (UHitPointsComponent* HitPointsComponent = UHitPointsComponent::FindHitPointsComponent(GetAvatarActorFromActorInfo()))
+		{
+			if (HitPointsComponent->GetDeathState() == EDeathState::ReviveStarted)
+			{
+				HitPointsComponent->FinishRevive();
+			}
 		}
 	}
 }

@@ -31,42 +31,7 @@ void UCrimAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AAc
 	check(ActorInfo);
 	check(InOwnerActor);
 
-	const bool bHasNewPawnAvatar = Cast<APawn>(InAvatarActor) && (InAvatarActor != ActorInfo->AvatarActor);
-
 	Super::InitAbilityActorInfo(InOwnerActor, InAvatarActor);
-
-	if (bHasNewPawnAvatar)
-	{
-		ABILITYLIST_SCOPE_LOCK();
-		// Notify all abilities that a new pawn avatar has been set
-		for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
-		{
-			UCrimGameplayAbility* CrimAbilityCDO = Cast<UCrimGameplayAbility>(AbilitySpec.Ability);
-			if (!CrimAbilityCDO)
-			{
-				continue;
-			}
-
-			if (CrimAbilityCDO->GetInstancingPolicy() == EGameplayAbilityInstancingPolicy::InstancedPerActor ||
-				CrimAbilityCDO->GetInstancingPolicy() == EGameplayAbilityInstancingPolicy::InstancedPerExecution)
-			{
-				TArray<UGameplayAbility*> Instances = AbilitySpec.GetAbilityInstances();
-				for (UGameplayAbility* AbilityInstance : Instances)
-				{
-					UCrimGameplayAbility* CrimAbilityInstance = Cast<UCrimGameplayAbility>(AbilityInstance);
-					if (CrimAbilityInstance)
-					{
-						// Ability instances may be missing for replays
-						CrimAbilityInstance->OnPawnAvatarSet();
-					}
-				}
-			}
-			else
-			{
-				CrimAbilityCDO->OnPawnAvatarSet();
-			}
-		}
-	}
 	
 	if (UCrimGlobalAbilitySystem* GlobalAbilitySystem = UWorld::GetSubsystem<UCrimGlobalAbilitySystem>(GetWorld()))
 	{

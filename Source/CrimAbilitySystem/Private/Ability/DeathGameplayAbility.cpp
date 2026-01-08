@@ -65,22 +65,44 @@ void UDeathGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, 
 
 void UDeathGameplayAbility::StartDeath()
 {
-	if (UHitPointsComponent* HitPointsComponent = UHitPointsComponent::FindHitPointsComponent(GetAvatarActorFromActorInfo()))
+	if (UHitPointsComponent* HitPointsComponent = UHitPointsComponent::FindHitPointsComponent(GetOwningActorFromActorInfo()))
 	{
 		if (HitPointsComponent->GetDeathState() == EDeathState::Alive)
 		{
 			HitPointsComponent->StartDeath();
 		}
 	}
+	
+	if (GetAvatarActorFromActorInfo() != GetOwningActorFromActorInfo())
+	{
+		if (UHitPointsComponent* HitPointsComponent = UHitPointsComponent::FindHitPointsComponent(GetAvatarActorFromActorInfo()))
+		{
+			if (HitPointsComponent->GetDeathState() == EDeathState::Alive)
+			{
+				HitPointsComponent->StartDeath();
+			}
+		}
+	}
 }
 
 void UDeathGameplayAbility::FinishDeath()
 {
-	if (UHitPointsComponent* HitPointsComponent = UHitPointsComponent::FindHitPointsComponent(GetAvatarActorFromActorInfo()))
+	if (UHitPointsComponent* HitPointsComponent = UHitPointsComponent::FindHitPointsComponent(GetOwningActorFromActorInfo()))
 	{
 		if (HitPointsComponent->GetDeathState() == EDeathState::DeathStarted)
 		{
 			HitPointsComponent->FinishDeath();
+		}
+	}
+	
+	if (GetAvatarActorFromActorInfo() != GetOwningActorFromActorInfo())
+	{
+		if (UHitPointsComponent* HitPointsComponent = UHitPointsComponent::FindHitPointsComponent(GetAvatarActorFromActorInfo()))
+		{
+			if (HitPointsComponent->GetDeathState() == EDeathState::DeathStarted)
+			{
+				HitPointsComponent->FinishDeath();
+			}
 		}
 	}
 }
