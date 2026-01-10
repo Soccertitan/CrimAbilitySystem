@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
-#include "CrimAttributeSetBase.generated.h"
+#include "CrimAttributeSet.generated.h"
 
 /**
  * This macro defines a set of helper functions for accessing and initializing attributes.
@@ -29,12 +29,12 @@ class UCrimAbilitySystemComponent;
  * Base class for Attribute Sets. Includes Macros and helper functions.
  */
 UCLASS()
-class CRIMABILITYSYSTEM_API UCrimAttributeSetBase : public UAttributeSet
+class CRIMABILITYSYSTEM_API UCrimAttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
 
 public:
-	UCrimAttributeSetBase();
+	UCrimAttributeSet();
 
 	UCrimAbilitySystemComponent* GetCrimAbilitySystemComponent() const;
 

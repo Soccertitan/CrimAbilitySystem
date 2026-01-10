@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
-#include "CrimAttributeSetBase.h"
+#include "CrimAttributeSet.h"
 #include "ResourcePointsAttributeSet.generated.h"
 
 /**
  * Attributes that are necessary for activating abilities. Like mana, action points, etc.
  */
 UCLASS()
-class CRIMABILITYSYSTEM_API UResourcePointsAttributeSet : public UCrimAttributeSetBase
+class CRIMABILITYSYSTEM_API UResourcePointsAttributeSet : public UCrimAttributeSet
 {
 	GENERATED_BODY()
 

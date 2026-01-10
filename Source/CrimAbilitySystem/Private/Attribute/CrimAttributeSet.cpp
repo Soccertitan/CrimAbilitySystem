@@ -1,28 +1,28 @@
 ﻿// Copyright Soccertitan 2025
 
 
-#include "Attribute/CrimAttributeSetBase.h"
+#include "Attribute/CrimAttributeSet.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "CrimAbilitySystemComponent.h"
 
-UCrimAttributeSetBase::UCrimAttributeSetBase()
+UCrimAttributeSet::UCrimAttributeSet()
 {
 }
 
-UCrimAbilitySystemComponent* UCrimAttributeSetBase::GetCrimAbilitySystemComponent() const
+UCrimAbilitySystemComponent* UCrimAttributeSet::GetCrimAbilitySystemComponent() const
 {
 	return Cast<UCrimAbilitySystemComponent>(GetOwningAbilitySystemComponent());
 }
 
-void UCrimAttributeSetBase::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
+void UCrimAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
 	Super::PreAttributeChange(Attribute, NewValue);
 	
 	ClampAttributes(Attribute, NewValue);
 }
 
-void UCrimAttributeSetBase::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
+void UCrimAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
 {
 	Super::PreAttributeBaseChange(Attribute, NewValue);
 	

@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
-#include "CrimAttributeSetBase.h"
+#include "CrimAttributeSet.h"
 #include "HitPointsAttributeSet.generated.h"
 
 /**
  * Class that defines attributes that are necessary for taking damage.
  */
 UCLASS()
-class CRIMABILITYSYSTEM_API UHitPointsAttributeSet : public UCrimAttributeSetBase
+class CRIMABILITYSYSTEM_API UHitPointsAttributeSet : public UCrimAttributeSet
 {
 	GENERATED_BODY()
 

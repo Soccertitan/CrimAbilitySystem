@@ -9,8 +9,8 @@
 
 UResourcePointsAttributeSet::UResourcePointsAttributeSet()
 {
-	CurrentPoints = 1.f;
-	MaxPoints = 1.f;
+	InitCurrentPoints(1.f);
+	InitMaxPoints(1.f);
 }
 
 void UResourcePointsAttributeSet::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const

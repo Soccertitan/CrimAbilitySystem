@@ -9,8 +9,8 @@
 
 UHitPointsAttributeSet::UHitPointsAttributeSet()
 {
-	CurrentPoints = 1.f;
-	MaxPoints = 1.f;
+	InitCurrentPoints(1.f);
+	InitMaxPoints(1.f);
 }
 
 void UHitPointsAttributeSet::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
