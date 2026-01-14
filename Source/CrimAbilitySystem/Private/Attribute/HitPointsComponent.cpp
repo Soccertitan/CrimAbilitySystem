@@ -194,33 +194,43 @@ void UHitPointsComponent::ClearGameplayTags()
 
 void UHitPointsComponent::OnHitPointsUpdated(const FOnAttributeChangeData& Data)
 {
-	OnHitPointsUpdatedDelegate.Broadcast(this, Data.OldValue, Data.NewValue, Data.GEModData->EffectSpec.GetEffectContext().Get()->GetInstigator());
+	AActor* Instigator = nullptr;
+	const FGameplayEffectContext* Spec = nullptr;
+	if (Data.GEModData)
+	{
+		Instigator = Data.GEModData->EffectSpec.GetEffectContext().Get()->GetInstigator();
+		Spec = Data.GEModData->EffectSpec.GetEffectContext().Get();
+	}
+	OnHitPointsUpdatedDelegate.Broadcast(this, Data.OldValue, Data.NewValue, Instigator);
 	
 	if (Data.NewValue <= 0.f && Data.OldValue > 0.f)
 	{
 		// I just died!
-		const FGameplayEffectContext* Spec = Data.GEModData->EffectSpec.GetEffectContext().Get();
-		AActor* Instigator = Spec ? Spec->GetOriginalInstigator() : nullptr;
+		AActor* OriginalInstigator = Spec ? Spec->GetOriginalInstigator() : nullptr;
 		const FGameplayEffectSpec& EffectSpec = Data.GEModData->EffectSpec;
 		const float Magnitude = Data.GEModData->EvaluatedData.Magnitude;
-		OnOutOfHitPoints(Instigator, EffectSpec, Magnitude);
+		OnOutOfHitPoints(OriginalInstigator, EffectSpec, Magnitude);
 	}
 	
 	if (Data.OldValue <= 0.f && Data.NewValue > 0.f)
 	{
 		// I am alive now.
-		const FGameplayEffectContext* Spec = Data.GEModData->EffectSpec.GetEffectContext().Get();
-		AActor* Instigator = Spec ? Spec->GetOriginalInstigator() : nullptr;
+		AActor* OriginalInstigator = Spec ? Spec->GetOriginalInstigator() : nullptr;
 		const FGameplayEffectSpec& EffectSpec = Data.GEModData->EffectSpec;
 		const float Magnitude = Data.GEModData->EvaluatedData.Magnitude;
 		// const float Magnitude = Data.GEModData ? Data.GEModData->EvaluatedData.Magnitude : FMath::Abs(Data.NewValue - Data.OldValue);
-		OnHitPointsUpdatedFromZero(Instigator, EffectSpec, Magnitude);
+		OnHitPointsUpdatedFromZero(OriginalInstigator, EffectSpec, Magnitude);
 	}
 }
 
 void UHitPointsComponent::OnMaxHitPointsUpdated(const FOnAttributeChangeData& Data)
 {
-	OnMaxHitPointsUpdatedDelegate.Broadcast(this, Data.OldValue, Data.NewValue, Data.GEModData->EffectSpec.GetEffectContext().Get()->GetInstigator());
+	AActor* Instigator = nullptr;
+	if (Data.GEModData)
+	{
+		Instigator = Data.GEModData->EffectSpec.GetEffectContext().Get()->GetInstigator();
+	}
+	OnMaxHitPointsUpdatedDelegate.Broadcast(this, Data.OldValue, Data.NewValue, Instigator);
 }
 
 void UHitPointsComponent::OnOutOfHitPoints(AActor* Instigator, const FGameplayEffectSpec& EffectSpec, float Magnitude)
