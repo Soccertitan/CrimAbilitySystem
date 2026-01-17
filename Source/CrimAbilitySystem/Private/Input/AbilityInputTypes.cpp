@@ -6,10 +6,10 @@
 #include "Input/AbilityInputManagerComponent.h"
 
 
-FAbilityInputItem::FAbilityInputItem(const FGameplayTag& InInputTag, TObjectPtr<UGameplayAbilityDefinition> InAbilityDefinition)
+FAbilityInputItem::FAbilityInputItem(const FGameplayTag& InInputTag, TSoftClassPtr<UGameplayAbility> InGameplayAbility)
 {
 	InputTag = InInputTag;
-	AbilityDefinition = InAbilityDefinition;
+	GameplayAbilityClass = InGameplayAbility;
 }
 
 void FAbilityInputItem::PostReplicatedAdd(const FAbilityInputContainer& InArraySerializer)
@@ -49,7 +49,7 @@ void FAbilityInputContainer::AddAbilityInputItem(const FAbilityInputItem& Item)
 		{
 			if (AbilityInputItem.InputTag == Item.InputTag)
 			{
-				AbilityInputItem.AbilityDefinition = Item.AbilityDefinition;
+				AbilityInputItem.GameplayAbilityClass = Item.GameplayAbilityClass;
 				Owner->OnAbilityInputChanged(AbilityInputItem);
 				MarkItemDirty(AbilityInputItem);
 				return;

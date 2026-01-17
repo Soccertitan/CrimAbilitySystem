@@ -134,12 +134,9 @@ private:
 	UPROPERTY(Replicated)
 	FAbilityInputContainer AbilityInputContainer;
 
-	/** The default abilities to be mapped to the AbilityInputContainer on BeginPlay. */
+	/** The startup abilities to be mapped to the AbilityInputContainer on BeginPlay. */
 	UPROPERTY(EditAnywhere, Category = "Input")
-	FAbilityInputContainer DefaultAbilityInputContainer;
-	/** If true, will clear out the Container first before applying the DefaultAbilityInputContainer on BeginPlay. */
-	UPROPERTY(EditAnywhere, Category = "Input")
-	bool bStartupOverrideAbilityInputs = false;
+	FAbilityInputContainer StartupAbilityInputContainer;
 
 	UPROPERTY()
 	TObjectPtr<UCrimAbilitySystemComponent> AbilitySystemComponent;

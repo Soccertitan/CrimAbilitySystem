@@ -6,7 +6,6 @@
 #include "AbilityGameplayTags.h"
 #include "CrimAbilitySystemComponent.h"
 #include "GameplayAbilitySpec.h"
-#include "Ability/GameplayAbilityDefinition.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -42,10 +41,9 @@ void UAbilityInputManagerComponent::InputTagPressed(const FGameplayTag& InputTag
 {
 	if (AbilitySystemComponent && InputTag.IsValid())
 	{
-		UGameplayAbilityDefinition* AbilityDefinition = AbilityInputContainer.FindInputAbilityItem(InputTag).AbilityDefinition;
-		if (AbilityDefinition && !AbilityDefinition->AbilityClass.IsNull())
+		const TSoftClassPtr<UGameplayAbility> AbilityClass = AbilityInputContainer.FindInputAbilityItem(InputTag).GameplayAbilityClass;
+		if (!AbilityClass.IsNull())
 		{
-			const TSoftClassPtr<UGameplayAbility> AbilityClass = AbilityDefinition->AbilityClass;
 			FScopedAbilityListLock ActiveScopeLock(*AbilitySystemComponent);
 			for (const FGameplayAbilitySpec& AbilitySpec : AbilitySystemComponent->GetActivatableAbilities())
 			{
@@ -64,10 +62,9 @@ void UAbilityInputManagerComponent::InputTagReleased(const FGameplayTag& InputTa
 {
 	if (AbilitySystemComponent && InputTag.IsValid())
 	{
-		UGameplayAbilityDefinition* AbilityDefinition = AbilityInputContainer.FindInputAbilityItem(InputTag).AbilityDefinition;
-		if (AbilityDefinition && !AbilityDefinition->AbilityClass.IsNull())
+		const TSoftClassPtr<UGameplayAbility> AbilityClass = AbilityInputContainer.FindInputAbilityItem(InputTag).GameplayAbilityClass;
+		if (!AbilityClass.IsNull())
 		{
-			const TSoftClassPtr<UGameplayAbility> AbilityClass = AbilityDefinition->AbilityClass;
 			FScopedAbilityListLock ActiveScopeLock(*AbilitySystemComponent);
 			for (const FGameplayAbilitySpec& AbilitySpec : AbilitySystemComponent->GetActivatableAbilities())
 			{
@@ -261,7 +258,7 @@ void UAbilityInputManagerComponent::ResetAbilityInputContainerToDefaults()
 		return;
 	}
 	AbilityInputContainer.Reset();
-	for (const FAbilityInputItem& InputItem : DefaultAbilityInputContainer.GetItems())
+	for (const FAbilityInputItem& InputItem : StartupAbilityInputContainer.GetItems())
 	{
 		AbilityInputContainer.AddAbilityInputItem(InputItem);
 	}
@@ -313,13 +310,12 @@ void UAbilityInputManagerComponent::BeginPlay()
 
 	if (HasAuthority())
 	{
-		if (bStartupOverrideAbilityInputs)
+		if (AbilityInputContainer.GetItems().IsEmpty())
 		{
-			AbilityInputContainer.Reset();
-		}
-		for (const FAbilityInputItem& InputItem : DefaultAbilityInputContainer.GetItems())
-		{
-			AbilityInputContainer.AddAbilityInputItem(InputItem);
+			for (const FAbilityInputItem& InputItem : StartupAbilityInputContainer.GetItems())
+			{
+				AbilityInputContainer.AddAbilityInputItem(InputItem);
+			}
 		}
 	}
 }

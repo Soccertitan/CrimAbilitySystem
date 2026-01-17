@@ -7,7 +7,7 @@
 #include "Net/Serialization/FastArraySerializer.h"
 #include "AbilityInputTypes.generated.h"
 
-class UGameplayAbilityDefinition;
+class UGameplayAbility;
 class UAbilityInputManagerComponent;
 struct FAbilityInputContainer;
 
@@ -19,15 +19,15 @@ struct CRIMABILITYSYSTEM_API FAbilityInputItem : public FFastArraySerializerItem
 {
 	GENERATED_BODY()
 	FAbilityInputItem(){}
-	FAbilityInputItem(const FGameplayTag& InInputTag, TObjectPtr<UGameplayAbilityDefinition> InAbilityDefinition);
+	FAbilityInputItem(const FGameplayTag& InInputTag, TSoftClassPtr<UGameplayAbility> InGameplayAbility);
 
 	// The InputTag to activate the abilities.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (Categories = "Input"))
 	FGameplayTag InputTag;
 
-	// The AbilityDefinition has the CrimGameplayAbility to activate when the input is pressed.
+	// The GameplayAbility class to activate.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr<UGameplayAbilityDefinition> AbilityDefinition;
+	TSoftClassPtr<UGameplayAbility> GameplayAbilityClass;
 	
 	void PostReplicatedAdd(const FAbilityInputContainer& InArraySerializer);
 	void PostReplicatedChange(const FAbilityInputContainer& InArraySerializer);
