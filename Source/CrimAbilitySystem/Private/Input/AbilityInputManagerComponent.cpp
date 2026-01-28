@@ -37,6 +37,14 @@ void UAbilityInputManagerComponent::OnAbilityInputRemoved(const FAbilityInputIte
 	OnAbilityInputRemovedDelegate.Broadcast(this, Item);
 }
 
+void UAbilityInputManagerComponent::InputPressed(const TSoftClassPtr<UGameplayAbility>& AbilityClass)
+{
+	if (AbilitySystemComponent && !AbilityClass.IsNull())
+	{
+		Internal_InputPressed(AbilityClass);
+	}
+}
+
 void UAbilityInputManagerComponent::InputTagPressed(const FGameplayTag& InputTag)
 {
 	if (AbilitySystemComponent && InputTag.IsValid())
@@ -44,17 +52,16 @@ void UAbilityInputManagerComponent::InputTagPressed(const FGameplayTag& InputTag
 		const TSoftClassPtr<UGameplayAbility> AbilityClass = AbilityInputContainer.FindInputAbilityItem(InputTag).GameplayAbilityClass;
 		if (!AbilityClass.IsNull())
 		{
-			FScopedAbilityListLock ActiveScopeLock(*AbilitySystemComponent);
-			for (const FGameplayAbilitySpec& AbilitySpec : AbilitySystemComponent->GetActivatableAbilities())
-			{
-				if (AbilitySpec.Ability && AbilitySpec.Ability->GetClass() == AbilityClass)
-				{
-					InputPressedSpecHandles.AddUnique(AbilitySpec.Handle);
-					InputHeldSpecHandles.AddUnique(AbilitySpec.Handle);
-					return;
-				}
-			}
+			Internal_InputPressed(AbilityClass);
 		}
+	}
+}
+
+void UAbilityInputManagerComponent::InputReleased(const TSoftClassPtr<UGameplayAbility>& AbilityClass)
+{
+	if (AbilitySystemComponent && !AbilityClass.IsNull())
+	{
+		Internal_InputReleased(AbilityClass);
 	}
 }
 
@@ -65,16 +72,7 @@ void UAbilityInputManagerComponent::InputTagReleased(const FGameplayTag& InputTa
 		const TSoftClassPtr<UGameplayAbility> AbilityClass = AbilityInputContainer.FindInputAbilityItem(InputTag).GameplayAbilityClass;
 		if (!AbilityClass.IsNull())
 		{
-			FScopedAbilityListLock ActiveScopeLock(*AbilitySystemComponent);
-			for (const FGameplayAbilitySpec& AbilitySpec : AbilitySystemComponent->GetActivatableAbilities())
-			{
-				if (AbilitySpec.Ability && AbilitySpec.Ability->GetClass() == AbilityClass)
-				{
-					InputReleasedSpecHandles.AddUnique(AbilitySpec.Handle);
-					InputHeldSpecHandles.Remove(AbilitySpec.Handle);
-					return;
-				}
-			}
+			Internal_InputReleased(AbilityClass);
 		}
 	}
 }
@@ -351,6 +349,34 @@ void UAbilityInputManagerComponent::ReleaseAbilityInput()
 					AbilitySystemComponent->AbilitySpecInputReleased(AbilitySpec);
 				}
 			}
+		}
+	}
+}
+
+void UAbilityInputManagerComponent::Internal_InputPressed(const TSoftClassPtr<UGameplayAbility>& AbilityClass)
+{
+	FScopedAbilityListLock ActiveScopeLock(*AbilitySystemComponent);
+	for (const FGameplayAbilitySpec& AbilitySpec : AbilitySystemComponent->GetActivatableAbilities())
+	{
+		if (AbilitySpec.Ability && AbilitySpec.Ability->GetClass() == AbilityClass)
+		{
+			InputPressedSpecHandles.AddUnique(AbilitySpec.Handle);
+			InputHeldSpecHandles.AddUnique(AbilitySpec.Handle);
+			return;
+		}
+	}
+}
+
+void UAbilityInputManagerComponent::Internal_InputReleased(const TSoftClassPtr<UGameplayAbility>& AbilityClass)
+{
+	FScopedAbilityListLock ActiveScopeLock(*AbilitySystemComponent);
+	for (const FGameplayAbilitySpec& AbilitySpec : AbilitySystemComponent->GetActivatableAbilities())
+	{
+		if (AbilitySpec.Ability && AbilitySpec.Ability->GetClass() == AbilityClass)
+		{
+			InputReleasedSpecHandles.AddUnique(AbilitySpec.Handle);
+			InputHeldSpecHandles.Remove(AbilitySpec.Handle);
+			return;
 		}
 	}
 }

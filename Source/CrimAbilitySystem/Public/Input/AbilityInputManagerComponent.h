@@ -32,12 +32,26 @@ public:
 	FAbilityInputManagerAbilityInputItemSignature OnAbilityInputRemovedDelegate;
 
 	/**
+	 * Adds the ability to a queue to be activated via ProcessAbilityInput
+	 * @param AbilityClass The Ability that is pressed.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
+	void InputPressed(const TSoftClassPtr<UGameplayAbility>& AbilityClass);
+	
+	/**
 	 * Adds all abilities to a queue to be activated via ProcessAbilityInput
 	 * @param InputTag The tag to find in the container.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
 	void InputTagPressed(const FGameplayTag& InputTag);
 
+	/**
+	 * Adds the ability to a queue to run AbilitySpecInputReleased.
+	 * @param AbilityClass The Ability that is pressed.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
+	void InputReleased(const TSoftClassPtr<UGameplayAbility>& AbilityClass);
+	
 	/**
 	 * Adds all abilities to a queue to run AbilitySpecInputReleased against.
 	 * @param InputTag The tag to find in the container.
@@ -147,6 +161,9 @@ private:
 	TArray<FGameplayAbilitySpecHandle> InputReleasedSpecHandles;
 	// Handles to abilities that have their input held mapped to an InputTag.
 	TArray<FGameplayAbilitySpecHandle> InputHeldSpecHandles;
+	
+	void Internal_InputPressed(const TSoftClassPtr<UGameplayAbility>& AbilityClass);
+	void Internal_InputReleased(const TSoftClassPtr<UGameplayAbility>& AbilityClass);
 
 	UFUNCTION(Server, Reliable)
 	void Server_AddAbilityInputItem(const FAbilityInputItem& Item);
