@@ -15,7 +15,7 @@ class UCrimAbilitySystemInterface : public UInterface
 };
 
 /**
- * 
+ * Add this interface to ActorComponents to respond when the ASC is initialized.
  */
 class CRIMABILITYSYSTEM_API ICrimAbilitySystemInterface
 {
