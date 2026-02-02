@@ -145,7 +145,7 @@ protected:
 	
 	// Base cooldown time.
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Cooldowns", meta = (ClampMin = "0.0"))
-	float BaseCooldown = 0.f;
+	FScalableFloat BaseCooldown = 0.f;
 
 	// Returns the actual cooldown for the ability.
 	UFUNCTION(BlueprintPure, BlueprintNativeEvent, Category = "Crim Ability System|Ability")

@@ -498,5 +498,5 @@ bool UCrimGameplayAbility::DoesAbilitySatisfyTagRequirements(const UAbilitySyste
 
 float UCrimGameplayAbility::GetCooldown_Implementation() const
 {
-	return BaseCooldown;
+	return BaseCooldown.GetValueAtLevel(GetAbilityLevel());
 }
