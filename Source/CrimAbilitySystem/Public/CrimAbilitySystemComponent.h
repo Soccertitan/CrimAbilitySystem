@@ -10,6 +10,7 @@
 
 class UAbilityTagRelationshipMapping;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FCrimAbilitySystemGenericTagSignature, const FGameplayTag& /*EventTag*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FCrimAbilitySystemAbilitySpecSignature, UCrimAbilitySystemComponent* /*this ASC*/, const FGameplayAbilitySpec& /* The Ability Spec */);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -102,6 +103,9 @@ public:
 	 * @param DynamicTag The tag to remove.
 	 */
 	void RemoveDynamicTagFromAbilitySpec(FGameplayAbilitySpec* AbilitySpec, const FGameplayTag& DynamicTag);
+	
+	/** AnimNotify_GameplayEvent will call this to broadcast a tag. */
+	FCrimAbilitySystemGenericTagSignature OnAnimNotifyDelegate;
 
 protected:
 

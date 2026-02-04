@@ -1,20 +1,21 @@
 ﻿// Copyright Soccertitan 2025
 
 
-#include "Ability/AbilityTask/AbilityTask_PlayMontageAndWaitForEvent.h"
+#include "Ability/AbilityTask/AbilityTask_PlayMontageWaitAnimNotify.h"
 
-#include "AbilitySystemComponent.h"
 #include "AbilitySystemGlobals.h"
 #include "CrimAbilityLogChannels.h"
+#include "CrimAbilitySystemComponent.h"
 #include "GameFramework/Character.h"
 
-UAbilityTask_PlayMontageAndWaitForEvent::UAbilityTask_PlayMontageAndWaitForEvent(const FObjectInitializer& ObjectInitializer)
+
+UAbilityTask_PlayMontageWaitAnimNotify::UAbilityTask_PlayMontageWaitAnimNotify(const FObjectInitializer& ObjectInitializer)
 {
 	Rate = 1.f;
 	bStopWhenAbilityEnds = true;
 }
 
-void UAbilityTask_PlayMontageAndWaitForEvent::Activate()
+void UAbilityTask_PlayMontageWaitAnimNotify::Activate()
 {
 	if (Ability == nullptr)
 	{
@@ -23,17 +24,14 @@ void UAbilityTask_PlayMontageAndWaitForEvent::Activate()
 
 	bool bPlayedMontage = false;
 
-	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+	if (UCrimAbilitySystemComponent* ASC = GetAbilitySystemComponent())
 	{
 		const FGameplayAbilityActorInfo* ActorInfo = Ability->GetCurrentActorInfo();
 		UAnimInstance* AnimInstance = ActorInfo->GetAnimInstance();
 		if (AnimInstance != nullptr)
 		{
 			// Bind to event callback
-			EventHandle = ASC->AddGameplayEventTagContainerDelegate(
-				EventTags,
-				FGameplayEventTagMulticastDelegate::FDelegate::CreateUObject(this, &UAbilityTask_PlayMontageAndWaitForEvent::OnGameplayEvent)
-			);
+			EventHandle = ASC->OnAnimNotifyDelegate.AddUObject(this, &UAbilityTask_PlayMontageWaitAnimNotify::OnAnimNotify);
 
 			if (ASC->PlayMontage(Ability, Ability->GetCurrentActivationInfo(), MontageToPlay, Rate, StartSection) > 0.f)
 			{
@@ -43,12 +41,12 @@ void UAbilityTask_PlayMontageAndWaitForEvent::Activate()
 					return;
 				}
 
-				CancelledHandle = Ability->OnGameplayAbilityCancelled.AddUObject(this, &UAbilityTask_PlayMontageAndWaitForEvent::OnAbilityCancelled);
+				CancelledHandle = Ability->OnGameplayAbilityCancelled.AddUObject(this, &UAbilityTask_PlayMontageWaitAnimNotify::OnAbilityCancelled);
 
-				BlendingOutDelegate.BindUObject(this, &UAbilityTask_PlayMontageAndWaitForEvent::OnMontageBlendingOut);
+				BlendingOutDelegate.BindUObject(this, &UAbilityTask_PlayMontageWaitAnimNotify::OnMontageBlendingOut);
 				AnimInstance->Montage_SetBlendingOutDelegate(BlendingOutDelegate, MontageToPlay);
 
-				MontageEndedDelegate.BindUObject(this, &UAbilityTask_PlayMontageAndWaitForEvent::OnMontageEnded);
+				MontageEndedDelegate.BindUObject(this, &UAbilityTask_PlayMontageWaitAnimNotify::OnMontageEnded);
 				AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, MontageToPlay);
 
 				ACharacter* Character = Cast<ACharacter>(GetAvatarActor());
@@ -63,28 +61,28 @@ void UAbilityTask_PlayMontageAndWaitForEvent::Activate()
 		}
 		else
 		{
-			UE_LOG(LogCrimAbilitySystem, Warning, TEXT("AbilityTask_PlayMontageAndWaitForEvent call to PlayMontage failed!"));
+			UE_LOG(LogCrimAbilitySystem, Warning, TEXT("AbilityTask_PlayMontageAndWaitForNotify call to PlayMontage failed!"));
 		}
 	}
 	else
 	{
-		UE_LOG(LogCrimAbilitySystem, Warning, TEXT("AbilityTask_PlayMontageAndWaitForEvent called on invalid AbilitySystemComponent"));
+		UE_LOG(LogCrimAbilitySystem, Warning, TEXT("AbilityTask_PlayMontageAndWaitForNotify called on invalid AbilitySystemComponent"));
 	}
 
 	if (!bPlayedMontage)
 	{
-		UE_LOG(LogCrimAbilitySystem, Warning, TEXT("AbilityTask_PlayMontageAndWaitForEvent called in Ability %s failed to play montage %s; Task Instance Name %s."), *Ability->GetName(), *GetNameSafe(MontageToPlay), *InstanceName.ToString());
+		UE_LOG(LogCrimAbilitySystem, Warning, TEXT("AbilityTask_PlayMontageAndWaitForNotify called in Ability %s failed to play montage %s; Task Instance Name %s."), *Ability->GetName(), *GetNameSafe(MontageToPlay), *InstanceName.ToString());
 		if (ShouldBroadcastAbilityTaskDelegates())
 		{
 			//ABILITY_LOG(Display, TEXT("%s: OnCancelled"), *GetName());
-			OnCancelled.Broadcast(FGameplayTag(), FGameplayEventData());
+			OnCancelled.Broadcast(FGameplayTag());
 		}
 	}
 
 	SetWaitingOnAvatar();
 }
 
-void UAbilityTask_PlayMontageAndWaitForEvent::ExternalCancel()
+void UAbilityTask_PlayMontageWaitAnimNotify::ExternalCancel()
 {
 	check(AbilitySystemComponent.Get());
 
@@ -93,7 +91,7 @@ void UAbilityTask_PlayMontageAndWaitForEvent::ExternalCancel()
 	Super::ExternalCancel();
 }
 
-FString UAbilityTask_PlayMontageAndWaitForEvent::GetDebugString() const
+FString UAbilityTask_PlayMontageWaitAnimNotify::GetDebugString() const
 {
 	UAnimMontage* PlayingMontage = nullptr;
 	if (Ability)
@@ -107,12 +105,12 @@ FString UAbilityTask_PlayMontageAndWaitForEvent::GetDebugString() const
 		}
 	}
 
-	return FString::Printf(TEXT("AbilityTask_PlayMontageAndWaitForEvent. MontageToPlay: %s  (Currently Playing): %s"), *GetNameSafe(MontageToPlay), *GetNameSafe(PlayingMontage));
+	return FString::Printf(TEXT("AbilityTask_PlayMontageAndWaitForNotify. MontageToPlay: %s  (Currently Playing): %s"), *GetNameSafe(MontageToPlay), *GetNameSafe(PlayingMontage));
 }
 
-void UAbilityTask_PlayMontageAndWaitForEvent::OnDestroy(bool AbilityEnded)
+void UAbilityTask_PlayMontageWaitAnimNotify::OnDestroy(bool AbilityEnded)
 {
-	// Note: Clearing montage end delegate isn't necessary since its not a multicast and will be cleared when the next montage plays.
+	// Note: Clearing montage end delegate isn't necessary since it is not a multicast and will be cleared when the next montage plays.
 	// (If we are destroyed, it will detect this and not do anything)
 
 	// This delegate, however, should be cleared as it is a multicast
@@ -125,22 +123,22 @@ void UAbilityTask_PlayMontageAndWaitForEvent::OnDestroy(bool AbilityEnded)
 		}
 	}
 
-	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+	if (UCrimAbilitySystemComponent* ASC = GetAbilitySystemComponent())
 	{
-		ASC->RemoveGameplayEventTagContainerDelegate(EventTags, EventHandle);
+		ASC->OnAnimNotifyDelegate.Remove(EventHandle);
 	}
 
 	Super::OnDestroy(AbilityEnded);
 }
 
-UAbilityTask_PlayMontageAndWaitForEvent* UAbilityTask_PlayMontageAndWaitForEvent::PlayMontageAndWaitForEvent(
+UAbilityTask_PlayMontageWaitAnimNotify* UAbilityTask_PlayMontageWaitAnimNotify::PlayMontageAndWaitForAnimNotify(
 	UGameplayAbility* OwningAbility, FName TaskInstanceName, UAnimMontage* MontageToPlay,
 	FGameplayTagContainer EventTags, float Rate, FName StartSection, bool bStopWhenAbilityEnds,
 	float AnimRootMotionTranslationScale)
 {
 	UAbilitySystemGlobals::NonShipping_ApplyGlobalAbilityScaler_Rate(Rate);
 
-	UAbilityTask_PlayMontageAndWaitForEvent* MyObj = NewAbilityTask<UAbilityTask_PlayMontageAndWaitForEvent>(OwningAbility, TaskInstanceName);
+	UAbilityTask_PlayMontageWaitAnimNotify* MyObj = NewAbilityTask<UAbilityTask_PlayMontageWaitAnimNotify>(OwningAbility, TaskInstanceName);
 	MyObj->MontageToPlay = MontageToPlay;
 	MyObj->EventTags = EventTags;
 	MyObj->Rate = Rate;
@@ -151,7 +149,7 @@ UAbilityTask_PlayMontageAndWaitForEvent* UAbilityTask_PlayMontageAndWaitForEvent
 	return MyObj;
 }
 
-bool UAbilityTask_PlayMontageAndWaitForEvent::StopPlayingMontage()
+bool UAbilityTask_PlayMontageWaitAnimNotify::StopPlayingMontage()
 {
 	const FGameplayAbilityActorInfo* ActorInfo = Ability->GetCurrentActorInfo();
 	if (!ActorInfo)
@@ -188,12 +186,12 @@ bool UAbilityTask_PlayMontageAndWaitForEvent::StopPlayingMontage()
 	return false;
 }
 
-UAbilitySystemComponent* UAbilityTask_PlayMontageAndWaitForEvent::GetAbilitySystemComponent() const
+UCrimAbilitySystemComponent* UAbilityTask_PlayMontageWaitAnimNotify::GetAbilitySystemComponent() const
 {
-	return AbilitySystemComponent.Get();
+	return Cast<UCrimAbilitySystemComponent>(AbilitySystemComponent.Get());
 }
 
-void UAbilityTask_PlayMontageAndWaitForEvent::OnMontageBlendingOut(UAnimMontage* Montage, bool bInterrupted)
+void UAbilityTask_PlayMontageWaitAnimNotify::OnMontageBlendingOut(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (Ability && Ability->GetCurrentMontage() == MontageToPlay)
 	{
@@ -217,49 +215,49 @@ void UAbilityTask_PlayMontageAndWaitForEvent::OnMontageBlendingOut(UAnimMontage*
 	{
 		if (ShouldBroadcastAbilityTaskDelegates())
 		{
-			OnInterrupted.Broadcast(FGameplayTag(), FGameplayEventData());
+			OnInterrupted.Broadcast(FGameplayTag());
 		}
 	}
 	else
 	{
 		if (ShouldBroadcastAbilityTaskDelegates())
 		{
-			OnBlendOut.Broadcast(FGameplayTag(), FGameplayEventData());
+			OnBlendOut.Broadcast(FGameplayTag());
 		}
 	}
 }
 
-void UAbilityTask_PlayMontageAndWaitForEvent::OnAbilityCancelled()
+void UAbilityTask_PlayMontageWaitAnimNotify::OnAbilityCancelled()
 {
 	if (StopPlayingMontage())
 	{
 		// Let the BP handle the interrupt as well
 		if (ShouldBroadcastAbilityTaskDelegates())
 		{
-			OnCancelled.Broadcast(FGameplayTag(), FGameplayEventData());
+			OnCancelled.Broadcast(FGameplayTag());
 		}
 	}
 }
 
-void UAbilityTask_PlayMontageAndWaitForEvent::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+void UAbilityTask_PlayMontageWaitAnimNotify::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (!bInterrupted)
 	{
 		if (ShouldBroadcastAbilityTaskDelegates())
 		{
-			OnCompleted.Broadcast(FGameplayTag(), FGameplayEventData());
+			OnCompleted.Broadcast(FGameplayTag());
 		}
 	}
 	EndTask();
 }
 
-void UAbilityTask_PlayMontageAndWaitForEvent::OnGameplayEvent(FGameplayTag EventTag, const FGameplayEventData* Payload)
+void UAbilityTask_PlayMontageWaitAnimNotify::OnAnimNotify(const FGameplayTag& EventTag)
 {
 	if (ShouldBroadcastAbilityTaskDelegates())
 	{
-		FGameplayEventData TempData = *Payload;
-		TempData.EventTag = EventTag;
-
-		EventReceived.Broadcast(EventTag, TempData);
+		if (!EventTags.IsValid() || EventTag.MatchesAny(EventTags))
+		{
+			NotifyReceived.Broadcast(EventTag);
+		}
 	}
 }
