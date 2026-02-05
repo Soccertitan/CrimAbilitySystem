@@ -4,6 +4,7 @@
 #include "CrimAbilitySystemComponent.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemLog.h"
 #include "CrimAbilitySystemInterface.h"
 #include "CrimAbilityLogChannels.h"
 #include "CrimGlobalAbilitySystem.h"
@@ -23,6 +24,101 @@ void UCrimAbilitySystemComponent::EndPlay(const EEndPlayReason::Type EndPlayReas
 	}
 	
 	Super::EndPlay(EndPlayReason);
+}
+
+bool UCrimAbilitySystemComponent::TryActivateAbilityByClassWithEventData(TSubclassOf<UGameplayAbility> InAbilityToActivate, const FGameplayEventData& EventData, bool bAllowRemoteActivation)
+{
+	bool bSuccess = false;
+
+	const UGameplayAbility* const InAbilityCDO = InAbilityToActivate.GetDefaultObject();
+
+	for (const FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
+	{
+		if (Spec.Ability == InAbilityCDO)
+		{
+
+			bSuccess |= CrimTryActivateAbility(Spec.Handle, &EventData, bAllowRemoteActivation);
+			break;
+		}
+	}
+
+	return bSuccess;
+}
+
+bool UCrimAbilitySystemComponent::CrimTryActivateAbility(FGameplayAbilitySpecHandle AbilityToActivate, const FGameplayEventData* TriggerEventData, bool bAllowRemoteActivation)
+{
+    FGameplayTagContainer FailureTags;
+    FGameplayAbilitySpec* Spec = FindAbilitySpecFromHandle(AbilityToActivate);
+    if (!Spec)
+    {
+        ABILITY_LOG(Warning, TEXT("TryActivateAbility called with invalid Handle"));
+        return false;
+    }
+
+    // Don't activate abilities that are waiting to be removed.
+    if (Spec->PendingRemove || Spec->RemoveAfterActivation)
+    {
+        return false;
+    }
+
+    UGameplayAbility* Ability = Spec->Ability;
+
+    if (!Ability)
+    {
+        ABILITY_LOG(Warning, TEXT("TryActivateAbility called with invalid Ability"));
+        return false;
+    }
+
+    const FGameplayAbilityActorInfo* ActorInfo = AbilityActorInfo.Get();
+
+    // Make sure the ActorInfo and then Actor on that FGameplayAbilityActorInfo are valid, if not bail out.
+    if (ActorInfo == nullptr || !ActorInfo->OwnerActor.IsValid() || !ActorInfo->AvatarActor.IsValid())
+    {
+        return false;
+    }
+        
+    const ENetRole NetMode = ActorInfo->AvatarActor->GetLocalRole();
+
+    // This should only come from button presses/local instigation (AI, etc).
+    if (NetMode == ROLE_SimulatedProxy)
+    {
+        return false;
+    }
+
+    bool bIsLocal = AbilityActorInfo->IsLocallyControlled();
+
+    // Check to see if this a local only or server only ability, if so either remotely execute or fail
+    if (!bIsLocal && (Ability->GetNetExecutionPolicy() == EGameplayAbilityNetExecutionPolicy::LocalOnly || Ability->GetNetExecutionPolicy() == EGameplayAbilityNetExecutionPolicy::LocalPredicted))
+    {
+        if (bAllowRemoteActivation)
+        {
+            ClientTryActivateAbility(AbilityToActivate);
+            return true;
+        }
+
+        ABILITY_LOG(Log, TEXT("Can't activate LocalOnly or LocalPredicted ability %s when not local."), *Ability->GetName());
+        return false;
+    }
+
+    if (NetMode != ROLE_Authority && (Ability->GetNetExecutionPolicy() == EGameplayAbilityNetExecutionPolicy::ServerOnly || Ability->GetNetExecutionPolicy() == EGameplayAbilityNetExecutionPolicy::ServerInitiated))
+    {
+        if (bAllowRemoteActivation)
+        {
+            if (Ability->CanActivateAbility(AbilityToActivate, ActorInfo, nullptr, nullptr, &FailureTags))
+            {
+                // No prediction key, server will assign a server-generated key
+                ServerTryActivateAbilityWithEventData(AbilityToActivate, Spec->InputPressed, ScopedPredictionKey, *TriggerEventData);
+                return true;
+            }
+            NotifyAbilityFailed(AbilityToActivate, Ability, FailureTags);
+            return false;
+        }
+
+        ABILITY_LOG(Log, TEXT("Can't activate ServerOnly or ServerInitiated ability %s when not the server."), *Ability->GetName());
+        return false;
+    }
+
+    return InternalTryActivateAbility(Spec->Handle, FPredictionKey(), nullptr, nullptr, TriggerEventData);
 }
 
 void UCrimAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor)

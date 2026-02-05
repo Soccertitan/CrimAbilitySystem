@@ -27,6 +27,11 @@ public:
 	//~UActorComponent interface
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	//~End of UActorComponent interface
+	
+	UFUNCTION(BlueprintCallable, Category = "Abilities")
+	bool TryActivateAbilityByClassWithEventData(TSubclassOf<UGameplayAbility> InAbilityToActivate, const FGameplayEventData& EventData, bool bAllowRemoteActivation = true);
+
+	bool CrimTryActivateAbility(FGameplayAbilitySpecHandle AbilityToActivate, const FGameplayEventData* TriggerEventData, bool bAllowRemoteActivation = true);
 
 	virtual void InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor) override;
 
