@@ -22,7 +22,7 @@ struct FCrimAbilityEndedData
 
 	/** True if this was cancelled deliberately, false if it ended normally */
 	UPROPERTY(BlueprintReadOnly, Category = "Ended Data")
-	bool bWasCancelled;
+	bool bWasCancelled = false;
 };
 
 /**
