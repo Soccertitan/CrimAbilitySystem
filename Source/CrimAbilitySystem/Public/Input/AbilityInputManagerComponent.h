@@ -36,7 +36,7 @@ public:
 	 * @param AbilityClass The Ability that is pressed.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void InputPressed(const TSoftClassPtr<UGameplayAbility>& AbilityClass);
+	void InputPressed(const TSubclassOf<UGameplayAbility>& AbilityClass);
 	
 	/**
 	 * Adds all abilities to a queue to be activated via ProcessAbilityInput
@@ -50,7 +50,7 @@ public:
 	 * @param AbilityClass The Ability that is pressed.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void InputReleased(const TSoftClassPtr<UGameplayAbility>& AbilityClass);
+	void InputReleased(const TSubclassOf<UGameplayAbility>& AbilityClass);
 	
 	/**
 	 * Adds all abilities to a queue to run AbilitySpecInputReleased against.
@@ -162,27 +162,27 @@ private:
 	// Handles to abilities that have their input held mapped to an InputTag.
 	TArray<FGameplayAbilitySpecHandle> InputHeldSpecHandles;
 	
-	void Internal_InputPressed(const TSoftClassPtr<UGameplayAbility>& AbilityClass);
-	void Internal_InputReleased(const TSoftClassPtr<UGameplayAbility>& AbilityClass);
+	void InternalInputPressed(const TSubclassOf<UGameplayAbility>& AbilityClass);
+	void InternalInputReleased(const TSubclassOf<UGameplayAbility>& AbilityClass);
 
 	UFUNCTION(Server, Reliable)
-	void Server_AddAbilityInputItem(const FAbilityInputItem& Item);
+	void ServerAddAbilityInputItem(const FAbilityInputItem& Item);
 
 	UFUNCTION(Server, Reliable)
-	void Server_AddAbilityInputItems(const TArray<FAbilityInputItem>& Items);
+	void ServerAddAbilityInputItems(const TArray<FAbilityInputItem>& Items);
 
 	UFUNCTION(Server, Reliable)
-	void Server_RemoveAbilityInputItem(const FGameplayTag& InputTag);
+	void ServerRemoveAbilityInputItem(const FGameplayTag& InputTag);
 
 	UFUNCTION(Server, Reliable)
-	void Server_RemoveAbilityInputItems(const TArray<FGameplayTag>& InputTags);
+	void ServerRemoveAbilityInputItems(const TArray<FGameplayTag>& InputTags);
 
 	UFUNCTION(Server, Reliable)
-	void Server_RemoveAbilityInputItemsByAbilityInputItem(const TArray<FAbilityInputItem>& Items);
+	void ServerRemoveAbilityInputItemsByAbilityInputItem(const TArray<FAbilityInputItem>& Items);
 
 	UFUNCTION(Server, Reliable)
-	void Server_ResetAbilityInputContainer();
+	void ServerResetAbilityInputContainer();
 
 	UFUNCTION(Server, Reliable)
-	void Server_ResetAbilityInputContainerToDefaults();
+	void ServerResetAbilityInputContainerToDefaults();
 };

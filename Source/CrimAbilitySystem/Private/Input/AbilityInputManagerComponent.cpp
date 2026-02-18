@@ -37,11 +37,11 @@ void UAbilityInputManagerComponent::OnAbilityInputRemoved(const FAbilityInputIte
 	OnAbilityInputRemovedDelegate.Broadcast(this, Item);
 }
 
-void UAbilityInputManagerComponent::InputPressed(const TSoftClassPtr<UGameplayAbility>& AbilityClass)
+void UAbilityInputManagerComponent::InputPressed(const TSubclassOf<UGameplayAbility>& AbilityClass)
 {
-	if (AbilitySystemComponent && !AbilityClass.IsNull())
+	if (AbilitySystemComponent)
 	{
-		Internal_InputPressed(AbilityClass);
+		InternalInputPressed(AbilityClass);
 	}
 }
 
@@ -50,18 +50,15 @@ void UAbilityInputManagerComponent::InputTagPressed(const FGameplayTag& InputTag
 	if (AbilitySystemComponent && InputTag.IsValid())
 	{
 		const TSoftClassPtr<UGameplayAbility> AbilityClass = AbilityInputContainer.FindInputAbilityItem(InputTag).GameplayAbilityClass;
-		if (!AbilityClass.IsNull())
-		{
-			Internal_InputPressed(AbilityClass);
-		}
+		InternalInputPressed(AbilityClass.Get());
 	}
 }
 
-void UAbilityInputManagerComponent::InputReleased(const TSoftClassPtr<UGameplayAbility>& AbilityClass)
+void UAbilityInputManagerComponent::InputReleased(const TSubclassOf<UGameplayAbility>& AbilityClass)
 {
-	if (AbilitySystemComponent && !AbilityClass.IsNull())
+	if (AbilitySystemComponent)
 	{
-		Internal_InputReleased(AbilityClass);
+		InternalInputReleased(AbilityClass);
 	}
 }
 
@@ -70,10 +67,7 @@ void UAbilityInputManagerComponent::InputTagReleased(const FGameplayTag& InputTa
 	if (AbilitySystemComponent && InputTag.IsValid())
 	{
 		const TSoftClassPtr<UGameplayAbility> AbilityClass = AbilityInputContainer.FindInputAbilityItem(InputTag).GameplayAbilityClass;
-		if (!AbilityClass.IsNull())
-		{
-			Internal_InputReleased(AbilityClass);
-		}
+		InternalInputReleased(AbilityClass.Get());
 	}
 }
 
@@ -183,7 +177,7 @@ void UAbilityInputManagerComponent::AddAbilityInputItem(const FAbilityInputItem&
 {
 	if (!HasAuthority())
 	{
-		Server_AddAbilityInputItem(Item);
+		ServerAddAbilityInputItem(Item);
 		return;
 	}
 	AbilityInputContainer.AddAbilityInputItem(Item);
@@ -193,7 +187,7 @@ void UAbilityInputManagerComponent::AddAbilityInputItems(const TArray<FAbilityIn
 {
 	if (!HasAuthority())
 	{
-		Server_AddAbilityInputItems(Items);
+		ServerAddAbilityInputItems(Items);
 		return;
 	}
 	for (const FAbilityInputItem& Item : Items)
@@ -206,7 +200,7 @@ void UAbilityInputManagerComponent::RemoveAbilityInputItem(const FGameplayTag& I
 {
 	if (!HasAuthority())
 	{
-		Server_RemoveAbilityInputItem(InputTag);
+		ServerRemoveAbilityInputItem(InputTag);
 		return;
 	}
 	AbilityInputContainer.RemoveAbilityInputItem(InputTag);
@@ -216,7 +210,7 @@ void UAbilityInputManagerComponent::RemoveAbilityInputItems(const TArray<FGamepl
 {
 	if (!HasAuthority())
 	{
-		Server_RemoveAbilityInputItems(InputTags);
+		ServerRemoveAbilityInputItems(InputTags);
 		return;
 	}
 	for (const FGameplayTag& InputTag : InputTags)
@@ -229,7 +223,7 @@ void UAbilityInputManagerComponent::RemoveAbilityInputItemsByAbilityInputItem(co
 {
 	if (!HasAuthority())
 	{
-		Server_RemoveAbilityInputItemsByAbilityInputItem_Implementation(Items);
+		ServerRemoveAbilityInputItemsByAbilityInputItem_Implementation(Items);
 		return;
 	}
 	for (const FAbilityInputItem& Item : Items)
@@ -242,7 +236,7 @@ void UAbilityInputManagerComponent::ResetAbilityInputContainer()
 {
 	if (!HasAuthority())
 	{
-		Server_ResetAbilityInputContainer();
+		ServerResetAbilityInputContainer();
 		return;
 	}
 	AbilityInputContainer.Reset();
@@ -252,7 +246,7 @@ void UAbilityInputManagerComponent::ResetAbilityInputContainerToDefaults()
 {
 	if (!HasAuthority())
 	{
-		Server_ResetAbilityInputContainerToDefaults();
+		ServerResetAbilityInputContainerToDefaults();
 		return;
 	}
 	AbilityInputContainer.Reset();
@@ -353,65 +347,71 @@ void UAbilityInputManagerComponent::ReleaseAbilityInput()
 	}
 }
 
-void UAbilityInputManagerComponent::Internal_InputPressed(const TSoftClassPtr<UGameplayAbility>& AbilityClass)
+void UAbilityInputManagerComponent::InternalInputPressed(const TSubclassOf<UGameplayAbility>& AbilityClass)
 {
-	FScopedAbilityListLock ActiveScopeLock(*AbilitySystemComponent);
-	for (const FGameplayAbilitySpec& AbilitySpec : AbilitySystemComponent->GetActivatableAbilities())
+	if (AbilityClass)
 	{
-		if (AbilitySpec.Ability && AbilitySpec.Ability->GetClass() == AbilityClass)
+		FScopedAbilityListLock ActiveScopeLock(*AbilitySystemComponent);
+		for (const FGameplayAbilitySpec& AbilitySpec : AbilitySystemComponent->GetActivatableAbilities())
 		{
-			InputPressedSpecHandles.AddUnique(AbilitySpec.Handle);
-			InputHeldSpecHandles.AddUnique(AbilitySpec.Handle);
-			return;
+			if (AbilitySpec.Ability && AbilitySpec.Ability->GetClass() == AbilityClass)
+			{
+				InputPressedSpecHandles.AddUnique(AbilitySpec.Handle);
+				InputHeldSpecHandles.AddUnique(AbilitySpec.Handle);
+				return;
+			}
 		}
 	}
 }
 
-void UAbilityInputManagerComponent::Internal_InputReleased(const TSoftClassPtr<UGameplayAbility>& AbilityClass)
+void UAbilityInputManagerComponent::InternalInputReleased(const TSubclassOf<UGameplayAbility>& AbilityClass)
 {
-	FScopedAbilityListLock ActiveScopeLock(*AbilitySystemComponent);
-	for (const FGameplayAbilitySpec& AbilitySpec : AbilitySystemComponent->GetActivatableAbilities())
+	if (AbilityClass)
 	{
-		if (AbilitySpec.Ability && AbilitySpec.Ability->GetClass() == AbilityClass)
+		FScopedAbilityListLock ActiveScopeLock(*AbilitySystemComponent);
+		for (const FGameplayAbilitySpec& AbilitySpec : AbilitySystemComponent->GetActivatableAbilities())
 		{
-			InputReleasedSpecHandles.AddUnique(AbilitySpec.Handle);
-			InputHeldSpecHandles.Remove(AbilitySpec.Handle);
-			return;
+			if (AbilitySpec.Ability && AbilitySpec.Ability->GetClass() == AbilityClass)
+			{
+				InputReleasedSpecHandles.AddUnique(AbilitySpec.Handle);
+				InputHeldSpecHandles.Remove(AbilitySpec.Handle);
+				return;
+			}
 		}
 	}
 }
 
-void UAbilityInputManagerComponent::Server_AddAbilityInputItem_Implementation(const FAbilityInputItem& Item)
+void UAbilityInputManagerComponent::ServerAddAbilityInputItem_Implementation(const FAbilityInputItem& Item)
 {
 	AddAbilityInputItem(Item);
 }
 
-void UAbilityInputManagerComponent::Server_AddAbilityInputItems_Implementation(const TArray<FAbilityInputItem>& Items)
+void UAbilityInputManagerComponent::ServerAddAbilityInputItems_Implementation(const TArray<FAbilityInputItem>& Items)
 {
 	AddAbilityInputItems(Items);
 }
 
-void UAbilityInputManagerComponent::Server_RemoveAbilityInputItem_Implementation(const FGameplayTag& InputTag)
+void UAbilityInputManagerComponent::ServerRemoveAbilityInputItem_Implementation(const FGameplayTag& InputTag)
 {
 	RemoveAbilityInputItem(InputTag);
 }
 
-void UAbilityInputManagerComponent::Server_RemoveAbilityInputItems_Implementation(const TArray<FGameplayTag>& InputTags)
+void UAbilityInputManagerComponent::ServerRemoveAbilityInputItems_Implementation(const TArray<FGameplayTag>& InputTags)
 {
 	RemoveAbilityInputItems(InputTags);
 }
 
-void UAbilityInputManagerComponent::Server_RemoveAbilityInputItemsByAbilityInputItem_Implementation(const TArray<FAbilityInputItem>& Items)
+void UAbilityInputManagerComponent::ServerRemoveAbilityInputItemsByAbilityInputItem_Implementation(const TArray<FAbilityInputItem>& Items)
 {
 	RemoveAbilityInputItemsByAbilityInputItem(Items);
 }
 
-void UAbilityInputManagerComponent::Server_ResetAbilityInputContainer_Implementation()
+void UAbilityInputManagerComponent::ServerResetAbilityInputContainer_Implementation()
 {
 	ResetAbilityInputContainer();
 }
 
-void UAbilityInputManagerComponent::Server_ResetAbilityInputContainerToDefaults_Implementation()
+void UAbilityInputManagerComponent::ServerResetAbilityInputContainerToDefaults_Implementation()
 {
 	ResetAbilityInputContainerToDefaults();
 }
