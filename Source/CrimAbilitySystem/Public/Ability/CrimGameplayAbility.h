@@ -78,6 +78,10 @@ public:
 	// Tries to change the activation group.  Returns true if it successfully changed.
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Crim Ability System|Ability", Meta = (ExpandBoolAsExecs = "ReturnValue"))
 	bool ChangeActivationGroup(EAbilityActivationGroup NewGroup);
+	
+	// Returns the actual cooldown for the ability.
+	UFUNCTION(BlueprintPure, Category = "Crim Ability System|Ability")
+	float GetBaseCooldown() const;
 
 	void OnAbilityFailedToActivate(const FGameplayTagContainer& FailedReason) const
 	{
@@ -143,13 +147,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Cooldowns", meta = (Categories = "Ability.Cooldown"))
 	FGameplayTagContainer CooldownTags;
 	
-	// Base cooldown time.
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Cooldowns", meta = (ClampMin = "0.0"))
+	// Base cooldown time. The magnitude can be automatically applied to the Cooldown GE via SetByCaller (SetByCaller.Cooldown) or the CrimMMC_AbilityCooldown.
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Cooldowns", meta = (ClampMin = "0"))
 	FScalableFloat BaseCooldown = 0.f;
-
-	// Returns the actual cooldown for the ability.
-	UFUNCTION(BlueprintPure, BlueprintNativeEvent, Category = "Crim Ability System|Ability")
-	float GetCooldown() const;
 
 	// Map of failure tags to simple error messages
 	UPROPERTY(EditDefaultsOnly, Category = "Advanced")

@@ -10,6 +10,7 @@
 #include "CrimAbilitySystemComponent.h"
 #include "CrimGameplayEffectContext.h"
 #include "AbilityGameplayTags.h"
+#include "Ability/GameplayEffect/CrimCooldownGameplayEffect.h"
 #include "Ability/MessageAbilityActivateFailure.h"
 #include "Ability/Cost/AbilityCost.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
@@ -33,6 +34,7 @@ UCrimGameplayAbility::UCrimGameplayAbility(const FObjectInitializer& ObjectIniti
 
 	ActivationPolicy = EAbilityActivationPolicy::OnInputTriggered;
 	ActivationGroup = EAbilityActivationGroup::Independent;
+	CooldownGameplayEffectClass = UCrimCooldownGameplayEffect::StaticClass();
 
 	bLogCancelation = false;
 }
@@ -155,6 +157,11 @@ bool UCrimGameplayAbility::ChangeActivationGroup(EAbilityActivationGroup NewGrou
 	}
 
 	return true;
+}
+
+float UCrimGameplayAbility::GetBaseCooldown() const
+{
+	return BaseCooldown.GetValueAtLevel(GetAbilityLevel());
 }
 
 void UCrimGameplayAbility::NativeOnAbilityFailedToActivate(const FGameplayTagContainer& FailedReason) const
@@ -346,7 +353,7 @@ void UCrimGameplayAbility::ApplyCooldown(const FGameplayAbilitySpecHandle Handle
 	{
 		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(CooldownGE->GetClass(), GetAbilityLevel());
 		SpecHandle.Data.Get()->DynamicGrantedTags.AppendTags(*GetCooldownTags());
-		SpecHandle.Data.Get()->SetSetByCallerMagnitude(FAbilityGameplayTags::Get().Ability_Cooldown, GetCooldown());
+		SpecHandle.Data.Get()->SetSetByCallerMagnitude(FAbilityGameplayTags::Get().SetByCaller_Cooldown, GetBaseCooldown());
 		ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, SpecHandle);
 	}
 }
@@ -494,9 +501,4 @@ bool UCrimGameplayAbility::DoesAbilitySatisfyTagRequirements(const UAbilitySyste
 	}
 
 	return true;
-}
-
-float UCrimGameplayAbility::GetCooldown_Implementation() const
-{
-	return BaseCooldown.GetValueAtLevel(GetAbilityLevel());
 }

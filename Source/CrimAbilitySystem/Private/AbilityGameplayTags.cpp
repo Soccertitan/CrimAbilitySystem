@@ -16,7 +16,6 @@ void FAbilityGameplayTags::InitializeNativeGameplayTags()
 
 	GameplayTags.Ability_ActivateFail_ActivationGroup = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.ActivateFail.ActivationGroup"), FString("Ability Failed due to activation group requirements."));
 	GameplayTags.Ability_ActivateFail_IsDead = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.ActivateFail.IsDead"), FString("Ability failed to activate due to death."));
-	GameplayTags.Ability_Cooldown = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.Cooldown"), FString("Root gameplay tag for all cooldown ability tags."));
 	GameplayTags.Ability_GameplayEvent_Death = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.GameplayEvent.Death"), FString("Triggers death gameplay abilities."));
 	GameplayTags.Ability_GameplayEvent_Revive = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.GameplayEvent.Revive"), FString("Triggers revive gameplay abilities."));
 	GameplayTags.Ability_InputBlocked = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.InputBlocked"), FString("Blocks abilities from being activated by player input."));
@@ -27,4 +26,6 @@ void FAbilityGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Gameplay_State_Death_Reviving = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Gameplay.State.Death.Reviving"), FString("The character has begun the reviving process."));
 
 	GameplayTags.Message_Ability_Activate_Failure = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Message.Ability.Activate.Failure"), FString("A generic tag indicating the ability failed to activate. Used in the gameplay messaging subsystem."));
+	
+	GameplayTags.SetByCaller_Cooldown = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("SetByCaller.Cooldown"), FString("Root gameplay tag for all cooldown ability tags."));
 }

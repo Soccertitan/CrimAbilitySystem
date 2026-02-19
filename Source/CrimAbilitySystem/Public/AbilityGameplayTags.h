@@ -33,7 +33,6 @@ public:
 	 */
 	FGameplayTag Ability_ActivateFail_ActivationGroup;
 	FGameplayTag Ability_ActivateFail_IsDead;
-	FGameplayTag Ability_Cooldown;
 	FGameplayTag Ability_GameplayEvent_Death;
 	FGameplayTag Ability_GameplayEvent_Revive;
 	FGameplayTag Ability_InputBlocked;
@@ -50,4 +49,6 @@ public:
 	 * Message Tags
 	 */
 	FGameplayTag Message_Ability_Activate_Failure;
+	
+	FGameplayTag SetByCaller_Cooldown;
 };
