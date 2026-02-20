@@ -194,31 +194,21 @@ void UHitPointsComponent::ClearGameplayTags()
 
 void UHitPointsComponent::OnHitPointsUpdated(const FOnAttributeChangeData& Data)
 {
-	AActor* Instigator = nullptr;
-	const FGameplayEffectContext* Spec = nullptr;
-	if (Data.GEModData)
-	{
-		Instigator = Data.GEModData->EffectSpec.GetEffectContext().Get()->GetInstigator();
-		Spec = Data.GEModData->EffectSpec.GetEffectContext().Get();
-	}
-	OnHitPointsUpdatedDelegate.Broadcast(this, Data.OldValue, Data.NewValue, Instigator);
+	AActor* OriginalInstigator = Data.GEModData ? Data.GEModData->EffectSpec.GetEffectContext().Get()->GetOriginalInstigator() : nullptr;
+	const FGameplayEffectSpec& EffectSpec = Data.GEModData ? Data.GEModData->EffectSpec : FGameplayEffectSpec();
+	const float Magnitude = Data.GEModData ? Data.GEModData->EvaluatedData.Magnitude : FMath::Abs(Data.OldValue - Data.NewValue);
+
+	OnHitPointsUpdatedDelegate.Broadcast(this, Data.OldValue, Data.NewValue, OriginalInstigator);
 	
 	if (Data.NewValue <= 0.f && Data.OldValue > 0.f)
 	{
 		// I just died!
-		AActor* OriginalInstigator = Spec ? Spec->GetOriginalInstigator() : nullptr;
-		const FGameplayEffectSpec& EffectSpec = Data.GEModData->EffectSpec;
-		const float Magnitude = Data.GEModData->EvaluatedData.Magnitude;
 		OnOutOfHitPoints(OriginalInstigator, EffectSpec, Magnitude);
 	}
 	
 	if (Data.OldValue <= 0.f && Data.NewValue > 0.f)
 	{
 		// I am alive now.
-		AActor* OriginalInstigator = Spec ? Spec->GetOriginalInstigator() : nullptr;
-		const FGameplayEffectSpec& EffectSpec = Data.GEModData->EffectSpec;
-		const float Magnitude = Data.GEModData->EvaluatedData.Magnitude;
-		// const float Magnitude = Data.GEModData ? Data.GEModData->EvaluatedData.Magnitude : FMath::Abs(Data.NewValue - Data.OldValue);
 		OnHitPointsUpdatedFromZero(OriginalInstigator, EffectSpec, Magnitude);
 	}
 }
