@@ -9,8 +9,7 @@ FAbilityGameplayTags FAbilityGameplayTags::GameplayTags;
 
 void FAbilityGameplayTags::InitializeNativeGameplayTags()
 {
-	GameplayTags.Ability = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability"), FString("Root Gameplay Tag for Ability related events."));
-	GameplayTags.Gameplay = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Gameplay"), FString("Root Gameplay Tag to define different Gameplay related GameplayTags."));
+	GameplayTags.Ability = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability"), FString("Root Gameplay Tag for Ability related events and states."));
 	GameplayTags.Input = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Input"), FString("Root Gameplay Tag for input related events."));
 	GameplayTags.Message = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Message"), FString("Root Gameplay Tag to send messages via Gameplay Message Subsystem."));
 
@@ -20,10 +19,11 @@ void FAbilityGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Ability_GameplayEvent_Revive = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.GameplayEvent.Revive"), FString("Triggers revive gameplay abilities."));
 	GameplayTags.Ability_InputBlocked = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.InputBlocked"), FString("Blocks abilities from being activated by player input."));
 	
-	GameplayTags.Gameplay_State_Death = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Gameplay.State.Death"), FString("The character has the death status."));
-	GameplayTags.Gameplay_State_Death_Dead = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Gameplay.State.Death.Dead"), FString("The character has finished the death process."));
-	GameplayTags.Gameplay_State_Death_Dying = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Gameplay.State.Death.Dying"), FString("The character has begun the death process."));
-	GameplayTags.Gameplay_State_Death_Reviving = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Gameplay.State.Death.Reviving"), FString("The character has begun the reviving process."));
+	GameplayTags.Ability_State = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.State"), FString("Root tag for various states the ASC/Ability can have."));
+	GameplayTags.Ability_State_Death = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.State.Death"), FString("The character has the death status."));
+	GameplayTags.Ability_State_Death_Dead = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.State.Death.Dead"), FString("The character has finished the death process."));
+	GameplayTags.Ability_State_Death_Dying = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.State.Death.Dying"), FString("The character has begun the death process."));
+	GameplayTags.Ability_State_Death_Reviving = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.State.Death.Reviving"), FString("The character has begun the reviving process."));
 
 	GameplayTags.Message_Ability_Activate_Failure = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Message.Ability.Activate.Failure"), FString("A generic tag indicating the ability failed to activate. Used in the gameplay messaging subsystem."));
 	

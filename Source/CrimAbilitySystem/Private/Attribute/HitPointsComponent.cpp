@@ -107,9 +107,9 @@ void UHitPointsComponent::StartDeath()
 
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Dying, 1);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Reviving, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Dead, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dying, 1);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Reviving, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dead, 0);
 	}
 
 	AActor* Owner = GetOwner();
@@ -125,9 +125,9 @@ void UHitPointsComponent::FinishDeath()
 
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Dead, 1);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Dying, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Reviving, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dead, 1);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dying, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Reviving, 0);
 	}
 
 	AActor* Owner = GetOwner();
@@ -144,9 +144,9 @@ void UHitPointsComponent::StartRevive()
 
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Reviving, 1);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Dead, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Dying, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Reviving, 1);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dead, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dying, 0);
 	}
 
 	AActor* Owner = GetOwner();
@@ -163,9 +163,9 @@ void UHitPointsComponent::FinishRevive()
 
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Dead, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Dying, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Reviving, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dead, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dying, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Reviving, 0);
 	}
 
 	AActor* Owner = GetOwner();
@@ -186,9 +186,9 @@ void UHitPointsComponent::ClearGameplayTags()
 {
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Dying, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Dead, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Gameplay_State_Death_Reviving, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dying, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dead, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Reviving, 0);
 	}
 }
 

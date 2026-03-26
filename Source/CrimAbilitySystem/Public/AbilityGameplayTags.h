@@ -24,7 +24,6 @@ public:
 	 * Generic Root Gameplay Tags
 	 */
 	FGameplayTag Ability;
-	FGameplayTag Gameplay;
 	FGameplayTag Input;
 	FGameplayTag Message;
 
@@ -38,12 +37,13 @@ public:
 	FGameplayTag Ability_InputBlocked;
 
 	/**
-	 * Gameplay State Tags
+	 * Ability State Tags
 	 */
-	FGameplayTag Gameplay_State_Death;
-	FGameplayTag Gameplay_State_Death_Dead;
-	FGameplayTag Gameplay_State_Death_Dying;
-	FGameplayTag Gameplay_State_Death_Reviving;
+	FGameplayTag Ability_State;
+	FGameplayTag Ability_State_Death;
+	FGameplayTag Ability_State_Death_Dead;
+	FGameplayTag Ability_State_Death_Dying;
+	FGameplayTag Ability_State_Death_Reviving;
 
 	/**
 	 * Message Tags

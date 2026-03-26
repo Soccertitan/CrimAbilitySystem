@@ -436,7 +436,7 @@ bool UCrimGameplayAbility::DoesAbilitySatisfyTagRequirements(const UAbilitySyste
 
 		if (AbilitySystemComponentTags.HasAny(AllBlockedTags))
 		{
-			if (OptionalRelevantTags && AbilitySystemComponentTags.HasTag(FAbilityGameplayTags::Get().Gameplay_State_Death))
+			if (OptionalRelevantTags && AbilitySystemComponentTags.HasTag(FAbilityGameplayTags::Get().Ability_State_Death))
 			{
 				// If player is dead and was rejected due to blocking tags, give that feedback
 				OptionalRelevantTags->AddTag(FAbilityGameplayTags::Get().Ability_ActivateFail_IsDead);
