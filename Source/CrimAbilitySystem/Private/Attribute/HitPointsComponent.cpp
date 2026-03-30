@@ -194,33 +194,36 @@ void UHitPointsComponent::ClearGameplayTags()
 
 void UHitPointsComponent::OnHitPointsUpdated(const FOnAttributeChangeData& Data)
 {
-	AActor* OriginalInstigator = Data.GEModData ? Data.GEModData->EffectSpec.GetEffectContext().Get()->GetOriginalInstigator() : nullptr;
+	AActor* Instigator = Data.GEModData ? Data.GEModData->EffectSpec.GetEffectContext().Get()->GetInstigator() : nullptr;
+	AActor* EffectCauser = Data.GEModData ? Data.GEModData->EffectSpec.GetEffectContext().Get()->GetEffectCauser() : nullptr;
 	const FGameplayEffectSpec& EffectSpec = Data.GEModData ? Data.GEModData->EffectSpec : FGameplayEffectSpec();
 	const float Magnitude = Data.GEModData ? Data.GEModData->EvaluatedData.Magnitude : FMath::Abs(Data.OldValue - Data.NewValue);
 
-	OnHitPointsUpdatedDelegate.Broadcast(this, Data.OldValue, Data.NewValue, OriginalInstigator);
+	OnHitPointsUpdatedDelegate.Broadcast(this, Data.OldValue, Data.NewValue, Instigator, EffectCauser);
 	
 	if (Data.NewValue <= 0.f && Data.OldValue > 0.f)
 	{
 		// I just died!
-		OnOutOfHitPoints(OriginalInstigator, EffectSpec, Magnitude);
+		OnOutOfHitPoints(Instigator, EffectSpec, Magnitude);
 	}
 	
 	if (Data.OldValue <= 0.f && Data.NewValue > 0.f)
 	{
 		// I am alive now.
-		OnHitPointsUpdatedFromZero(OriginalInstigator, EffectSpec, Magnitude);
+		OnHitPointsUpdatedFromZero(Instigator, EffectSpec, Magnitude);
 	}
 }
 
 void UHitPointsComponent::OnMaxHitPointsUpdated(const FOnAttributeChangeData& Data)
 {
 	AActor* Instigator = nullptr;
+	AActor* EffectCauser = nullptr;
 	if (Data.GEModData)
 	{
 		Instigator = Data.GEModData->EffectSpec.GetEffectContext().Get()->GetInstigator();
+		EffectCauser = Data.GEModData->EffectSpec.GetEffectContext().Get()->GetEffectCauser();
 	}
-	OnMaxHitPointsUpdatedDelegate.Broadcast(this, Data.OldValue, Data.NewValue, Instigator);
+	OnMaxHitPointsUpdatedDelegate.Broadcast(this, Data.OldValue, Data.NewValue, Instigator, EffectCauser);
 }
 
 void UHitPointsComponent::OnOutOfHitPoints(AActor* Instigator, const FGameplayEffectSpec& EffectSpec, float Magnitude)
