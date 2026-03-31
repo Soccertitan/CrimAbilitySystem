@@ -5,10 +5,8 @@
 
 #include "AbilityGameplayTags.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "CrimAbilitySystemBlueprintFunctionLibrary.h"
 #include "GameplayEffectExtension.h"
 #include "CrimAbilitySystemComponent.h"
-#include "Abilities/Tasks/AbilityTask.h"
 #include "Net/UnrealNetwork.h"
 
 UHitPointsAttributeSet::UHitPointsAttributeSet()
