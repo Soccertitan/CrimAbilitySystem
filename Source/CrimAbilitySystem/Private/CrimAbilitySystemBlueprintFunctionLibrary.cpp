@@ -5,8 +5,10 @@
 
 #include "AbilitySystemGlobals.h"
 #include "CrimAbilitySystemComponent.h"
+#include "CrimGameplayEffectContext.h"
 #include "Input/AbilityInputManagerComponent.h"
 #include "Input/AbilityInputManagerInterface.h"
+#include "StructUtils/InstancedStruct.h"
 
 UCrimAbilitySystemComponent* UCrimAbilitySystemBlueprintFunctionLibrary::GetAbilitySystemComponent(AActor* Actor, bool LookForComponent)
 {
@@ -83,4 +85,20 @@ float UCrimAbilitySystemBlueprintFunctionLibrary::EvaluateAttributeValueWithTags
 	RetVal = Aggregator.EvaluateToChannel(EvalParams, Channel);
 
 	return RetVal;
+}
+
+FInstancedStruct UCrimAbilitySystemBlueprintFunctionLibrary::FindCustomDataFragmentFromContext(const UScriptStruct* FragmentType, const FGameplayEffectContextHandle& EffectContext)
+{
+	const FCrimGameplayEffectContext* Context = static_cast<const FCrimGameplayEffectContext*>(EffectContext.Get());
+	if (Context)
+	{
+		for (const auto& Fragment : Context->GetCustomDataFragments())
+		{
+			if (Fragment.GetScriptStruct() == FragmentType)
+			{
+				return Fragment;
+			}
+		}
+	}
+	return FInstancedStruct();
 }

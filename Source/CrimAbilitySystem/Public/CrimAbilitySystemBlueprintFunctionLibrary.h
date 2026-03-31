@@ -6,6 +6,8 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "CrimAbilitySystemBlueprintFunctionLibrary.generated.h"
 
+struct FGameplayEffectContextHandle;
+struct FInstancedStruct;
 struct FGameplayTagContainer;
 enum class EGameplayModEvaluationChannel : uint8;
 struct FGameplayAttribute;
@@ -25,10 +27,10 @@ public:
 	 * Searches the passed in actor for an ability system component, will use IAbilitySystemInterface or fall back to a
 	 * component search.
 	 */
-	UFUNCTION(BlueprintPure, meta = (Cateogry = "Crim Ability System", DefaultToSelf = Actor))
+	UFUNCTION(BlueprintPure, meta = (Cateogry = "Ability", DefaultToSelf = Actor))
 	static UCrimAbilitySystemComponent* GetAbilitySystemComponent(AActor* Actor, bool LookForComponent = true);
 
-	UFUNCTION(BlueprintPure, meta = (Cateogry = "Crim Ability System", DefaultToSelf = Actor))
+	UFUNCTION(BlueprintPure, meta = (Cateogry = "Ability", DefaultToSelf = Actor))
 	static UAbilityInputManagerComponent* GetAbilityInputManagerComponent(AActor* Actor, bool LookForComponent = true);
 	
 	/** Returns the value of Attribute from the ability system component AbilitySystem after evaluating it with source and target tags and up to the channel. bSuccess indicates the success or failure of this operation. */
@@ -38,4 +40,7 @@ public:
 	/** Returns the value of Attribute from the ability system component AbilitySystem after evaluating it with source and target tags and up to the channel using the passed in base value instead of the real base value. bSuccess indicates the success or failure of this operation. */
 	UFUNCTION(BlueprintPure, Category = "Ability|Attribute")
 	static float EvaluateAttributeValueWithTagsUpToChannelAndBase(UAbilitySystemComponent* AbilitySystem, FGameplayAttribute Attribute, EGameplayModEvaluationChannel Channel, const FGameplayTagContainer& SourceTags, const FGameplayTagContainer& TargetTags, float BaseValue, bool& bSuccess);
+	
+	UFUNCTION(BlueprintPure, Category = "Ability|Effect Context")
+	static FInstancedStruct FindCustomDataFragmentFromContext(const UScriptStruct* FragmentType, const FGameplayEffectContextHandle& EffectContext);
 };
