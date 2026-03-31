@@ -4,6 +4,16 @@
 #include "CrimGameplayEffectContext.h"
 
 
+const TArray<FInstancedStruct>& FCrimGameplayEffectContext::GetCustomDataFragments() const
+{
+	return CustomDataFragments;
+}
+
+TArray<FInstancedStruct>& FCrimGameplayEffectContext::GetMutableCustomDataFragments()
+{
+	return CustomDataFragments;
+}
+
 bool FCrimGameplayEffectContext::NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
 {
 	uint32 RepBits = 0;
@@ -37,7 +47,7 @@ bool FCrimGameplayEffectContext::NetSerialize(FArchive& Ar, class UPackageMap* M
 		{
 			RepBits |= 1 << 6;
 		}
-		if (bIsCriticalHit)
+		if (!CustomDataFragments.IsEmpty())
 		{
 			RepBits |= 1 << 7;
 		}
@@ -87,7 +97,7 @@ bool FCrimGameplayEffectContext::NetSerialize(FArchive& Ar, class UPackageMap* M
 	}
 	if (RepBits & (1 << 7))
 	{
-		Ar << bIsCriticalHit;
+		SafeNetSerializeTArray_WithNetSerialize<31>(Ar, CustomDataFragments, Map);
 	}
 
 	if (Ar.IsLoading())

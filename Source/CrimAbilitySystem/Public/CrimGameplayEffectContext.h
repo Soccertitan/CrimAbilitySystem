@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayEffectTypes.h"
+#include "StructUtils/InstancedStruct.h"
 #include "CrimGameplayEffectContext.generated.h"
 
 USTRUCT()
@@ -11,8 +12,46 @@ struct FCrimGameplayEffectContext : public FGameplayEffectContext
 {
 	GENERATED_BODY()
 
-	bool IsCriticalHit() const {return bIsCriticalHit;}
-	void SetIsCriticalHit (const bool bValue) {bIsCriticalHit = bValue;}
+	const TArray<FInstancedStruct>& GetCustomDataFragments() const;
+	TArray<FInstancedStruct>& GetMutableCustomDataFragments();
+	
+	template <typename T>
+	const T* FindCustomDataFragment() const
+	{
+		for (const auto& Fragment : CustomDataFragments)
+		{
+			if (const T* TypedFragment = Fragment.GetPtr<T>())
+			{
+				return TypedFragment;
+			}
+		}
+		return nullptr;
+	}
+	
+	template <typename T>
+	T* FindMutableCustomDataFragment()
+	{
+		for (auto& Fragment : CustomDataFragments)
+		{
+			if (T* TypedFragment = Fragment.GetMutablePtr<T>())
+			{
+				return TypedFragment;
+			}
+		}
+		return nullptr;
+	}
+
+	/** Adds a Custom Data Fragment to the CustomDataFragments array */
+	template <typename T>
+	void AddCustomDataFragment(const T& Fragment)
+	{
+		FInstancedStruct InstancedStruct;
+		InstancedStruct.InitializeAs<T>();
+		T& Mutable = InstancedStruct.GetMutable<T>();
+		Mutable = Fragment;
+
+		CustomDataFragments.Add(MoveTemp(InstancedStruct));
+	}
 
 	/** Creates a copy of this context, used to duplicate for later modifications */
 	virtual FGameplayEffectContext* Duplicate() const override
@@ -39,7 +78,7 @@ struct FCrimGameplayEffectContext : public FGameplayEffectContext
 protected:
 	
 	UPROPERTY()
-	bool bIsCriticalHit = false;
+	TArray<FInstancedStruct> CustomDataFragments{};
 };
 
 template<>
