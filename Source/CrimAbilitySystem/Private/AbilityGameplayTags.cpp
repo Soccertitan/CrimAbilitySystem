@@ -15,7 +15,13 @@ void FAbilityGameplayTags::InitializeNativeGameplayTags()
 
 	GameplayTags.Ability_ActivateFail_ActivationGroup = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.ActivateFail.ActivationGroup"), FString("Ability Failed due to activation group requirements."));
 	GameplayTags.Ability_ActivateFail_IsDead = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.ActivateFail.IsDead"), FString("Ability failed to activate due to death."));
+	GameplayTags.Ability_GameplayEvent_Damage = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.GameplayEvent.Damage"), FString("Root gameplay tag for damage related events."));
+	GameplayTags.Ability_GameplayEvent_Damage_HitPoints = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.GameplayEvent.Damage.HitPoints"), FString("Triggers an event when HitPoints AttributeSet was tried to be damaged."));
+	GameplayTags.Ability_GameplayEvent_Damage_Resource = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.GameplayEvent.Damage.Resource"), FString("Triggers an event when Resource AttributeSet was tried to be damaged."));
 	GameplayTags.Ability_GameplayEvent_Death = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.GameplayEvent.Death"), FString("Triggers death gameplay abilities."));
+	GameplayTags.Ability_GameplayEvent_Healing = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.GameplayEvent.Healing"), FString("Root gameplay tag for healing related events."));
+	GameplayTags.Ability_GameplayEvent_Healing_HitPoints = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.GameplayEvent.Healing.HitPoints"), FString("Triggers an event when HitPoints AttributeSet was tried to be healed."));
+	GameplayTags.Ability_GameplayEvent_Healing_Resource = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.GameplayEvent.Healing.Resource"), FString("Triggers an event when Resource AttributeSet was tried to be healed."));
 	GameplayTags.Ability_GameplayEvent_Revive = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.GameplayEvent.Revive"), FString("Triggers revive gameplay abilities."));
 	GameplayTags.Ability_InputBlocked = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Ability.InputBlocked"), FString("Blocks abilities from being activated by player input."));
 	

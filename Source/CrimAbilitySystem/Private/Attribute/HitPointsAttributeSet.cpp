@@ -3,8 +3,12 @@
 
 #include "Attribute/HitPointsAttributeSet.h"
 
+#include "AbilityGameplayTags.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "CrimAbilitySystemBlueprintFunctionLibrary.h"
 #include "GameplayEffectExtension.h"
 #include "CrimAbilitySystemComponent.h"
+#include "Abilities/Tasks/AbilityTask.h"
 #include "Net/UnrealNetwork.h"
 
 UHitPointsAttributeSet::UHitPointsAttributeSet()
@@ -109,6 +113,7 @@ void UHitPointsAttributeSet::HandleDamage(const FGameplayEffectModCallbackData& 
 	const float LocalDamage = FMath::Abs(Magnitude);
 
 	SetCurrentPoints(FMath::Clamp(GetCurrentPoints() - LocalDamage, 0.f, GetMaxPoints()));
+	SendGameplayEvent(Data, FAbilityGameplayTags::Get().Ability_GameplayEvent_Damage_HitPoints);
 }
 
 void UHitPointsAttributeSet::HandleHealing(const FGameplayEffectModCallbackData& Data, float Magnitude)
@@ -116,4 +121,5 @@ void UHitPointsAttributeSet::HandleHealing(const FGameplayEffectModCallbackData&
 	const float LocalHealing = FMath::Abs(Magnitude);
 
 	SetCurrentPoints(FMath::Clamp(GetCurrentPoints() + LocalHealing, 0.f, GetMaxPoints()));
+	SendGameplayEvent(Data, FAbilityGameplayTags::Get().Ability_GameplayEvent_Healing_HitPoints);
 }

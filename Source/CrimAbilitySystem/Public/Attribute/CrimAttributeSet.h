@@ -23,6 +23,7 @@ GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
 GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
 GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
+struct FGameplayTag;
 class UCrimAbilitySystemComponent;
 
 /**
@@ -43,4 +44,10 @@ protected:
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
 	virtual void ClampAttributes(const FGameplayAttribute& Attribute, float& NewValue) const {}
+	
+	/** 
+	 * Sends a gameplay event to the owner and instigator of the callback. Filling in the EventData. 
+	 * @note Only runs in server context.
+	 */
+	void SendGameplayEvent(const FGameplayEffectModCallbackData& Data, const FGameplayTag& EventTag);
 };

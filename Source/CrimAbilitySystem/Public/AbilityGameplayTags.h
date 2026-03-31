@@ -32,7 +32,13 @@ public:
 	 */
 	FGameplayTag Ability_ActivateFail_ActivationGroup;
 	FGameplayTag Ability_ActivateFail_IsDead;
+	FGameplayTag Ability_GameplayEvent_Damage;
+	FGameplayTag Ability_GameplayEvent_Damage_HitPoints;
+	FGameplayTag Ability_GameplayEvent_Damage_Resource;
 	FGameplayTag Ability_GameplayEvent_Death;
+	FGameplayTag Ability_GameplayEvent_Healing;
+	FGameplayTag Ability_GameplayEvent_Healing_HitPoints;
+	FGameplayTag Ability_GameplayEvent_Healing_Resource;
 	FGameplayTag Ability_GameplayEvent_Revive;
 	FGameplayTag Ability_InputBlocked;
 
