@@ -41,16 +41,17 @@ struct FCrimGameplayEffectContext : public FGameplayEffectContext
 		return nullptr;
 	}
 
-	/** Adds a Custom Data Fragment to the CustomDataFragments array */
+	/** Adds a Custom Data Fragment to the CustomDataFragments array. Returns a pointer to the added item. */
 	template <typename T>
-	void AddCustomDataFragment(const T& Fragment)
+	T* AddCustomDataFragment(const T& Fragment)
 	{
 		FInstancedStruct InstancedStruct;
 		InstancedStruct.InitializeAs<T>();
 		T& Mutable = InstancedStruct.GetMutable<T>();
 		Mutable = Fragment;
 
-		CustomDataFragments.Add(MoveTemp(InstancedStruct));
+		int32 Index = CustomDataFragments.Add(MoveTemp(InstancedStruct));
+		return CustomDataFragments[Index].GetMutablePtr<T>();
 	}
 
 	/** Creates a copy of this context, used to duplicate for later modifications */

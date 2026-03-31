@@ -34,7 +34,7 @@ void UCrimAttributeSet::SendGameplayEvent(const FGameplayEffectModCallbackData& 
 {
 #if WITH_SERVER_CODE
 	UAbilitySystemComponent* AbilitySystemComponent = GetOwningAbilitySystemComponentChecked();
-	// Send the "GameplayEvent.Damage.HitPoints" gameplay event through the Owner's and Instigator's ability system.
+	// Send a gameplay event through the Owner's and Instigator's ability system.
 	FGameplayEventData Payload;
 	Payload.EventTag = EventTag;
 	Payload.Instigator = Data.EffectSpec.GetEffectContext().GetInstigator();
