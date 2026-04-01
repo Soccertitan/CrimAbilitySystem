@@ -3,7 +3,7 @@
 
 #include "Input/AbilityInputManagerComponent.h"
 
-#include "AbilityGameplayTags.h"
+#include "CrimAbilityNativeGameplayTags.h"
 #include "CrimAbilitySystemComponent.h"
 #include "GameplayAbilitySpec.h"
 #include "Net/UnrealNetwork.h"
@@ -74,7 +74,7 @@ void UAbilityInputManagerComponent::InputTagReleased(const FGameplayTag& InputTa
 void UAbilityInputManagerComponent::ProcessAbilityInput(float DeltaTime, bool bGamePaused)
 {
 	if (!AbilitySystemComponent ||
-		AbilitySystemComponent->HasMatchingGameplayTag(FAbilityGameplayTags::Get().Ability_InputBlocked))
+		AbilitySystemComponent->HasMatchingGameplayTag(CrimAbility::NativeGameplayTag::Ability_InputBlocked))
 	{
 		ReleaseAbilityInput();
 		return;

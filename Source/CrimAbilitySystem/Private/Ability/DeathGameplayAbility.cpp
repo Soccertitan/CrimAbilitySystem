@@ -5,14 +5,9 @@
 
 #include "CrimAbilityLogChannels.h"
 #include "CrimAbilitySystemComponent.h"
-#include "AbilityGameplayTags.h"
-#include "NativeGameplayTags.h"
+#include "CrimAbilityNativeGameplayTags.h"
 #include "Attribute/HitPointsComponent.h"
 
-namespace DeathTag
-{
-	UE_DEFINE_GAMEPLAY_TAG_STATIC(Ability_GameplayEvent_Death, "Ability.GameplayEvent.Death")
-}
 
 UDeathGameplayAbility::UDeathGameplayAbility()
 {
@@ -24,7 +19,7 @@ UDeathGameplayAbility::UDeathGameplayAbility()
 	{
 		// Add the ability trigger tag as default to the CDO.
 		FAbilityTriggerData TriggerData;
-		TriggerData.TriggerTag = DeathTag::Ability_GameplayEvent_Death;
+		TriggerData.TriggerTag = CrimAbility::NativeGameplayTag::Ability_GameplayEvent_Death;
 		TriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
 		AbilityTriggers.Add(TriggerData);
 	}

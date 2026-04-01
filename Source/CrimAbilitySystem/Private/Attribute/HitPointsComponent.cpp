@@ -5,7 +5,7 @@
 
 #include "CrimAbilityLogChannels.h"
 #include "CrimAbilitySystemComponent.h"
-#include "AbilityGameplayTags.h"
+#include "CrimAbilityNativeGameplayTags.h"
 #include "GameplayEffectExtension.h"
 #include "Attribute/HitPointsAttributeSet.h"
 #include "Net/UnrealNetwork.h"
@@ -107,9 +107,9 @@ void UHitPointsComponent::StartDeath()
 
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dying, 1);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Reviving, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dead, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Dying, 1);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Reviving, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Dead, 0);
 	}
 
 	AActor* Owner = GetOwner();
@@ -125,9 +125,9 @@ void UHitPointsComponent::FinishDeath()
 
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dead, 1);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dying, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Reviving, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Dead, 1);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Dying, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Reviving, 0);
 	}
 
 	AActor* Owner = GetOwner();
@@ -144,9 +144,9 @@ void UHitPointsComponent::StartRevive()
 
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Reviving, 1);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dead, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dying, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Reviving, 1);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Dead, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Dying, 0);
 	}
 
 	AActor* Owner = GetOwner();
@@ -163,9 +163,9 @@ void UHitPointsComponent::FinishRevive()
 
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dead, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dying, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Reviving, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Dead, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Dying, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Reviving, 0);
 	}
 
 	AActor* Owner = GetOwner();
@@ -186,9 +186,9 @@ void UHitPointsComponent::ClearGameplayTags()
 {
 	if (AbilitySystemComponent)
 	{
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dying, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Dead, 0);
-		AbilitySystemComponent->SetLooseGameplayTagCount(FAbilityGameplayTags::Get().Ability_State_Death_Reviving, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Dying, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Dead, 0);
+		AbilitySystemComponent->SetLooseGameplayTagCount(CrimAbility::NativeGameplayTag::Ability_State_Death_Reviving, 0);
 	}
 }
 
@@ -233,7 +233,7 @@ void UHitPointsComponent::OnOutOfHitPoints(AActor* Instigator, const FGameplayEf
 	{
 		// Send the "GameplayEvent.Death" gameplay event through the owner's ability system.  This can be used to trigger a death gameplay ability.
 		FGameplayEventData Payload;
-		Payload.EventTag = FAbilityGameplayTags::Get().Ability_GameplayEvent_Death;
+		Payload.EventTag = CrimAbility::NativeGameplayTag::Ability_GameplayEvent_Death;
 		Payload.Instigator = Instigator;
 		Payload.Target = AbilitySystemComponent->GetOwnerActor();
 		Payload.OptionalObject = EffectSpec.Def;
@@ -255,7 +255,7 @@ void UHitPointsComponent::OnHitPointsUpdatedFromZero(AActor* Instigator, const F
 	{
 		// Send the "GameplayEvent.Resurrection" gameplay event through the owner's ability system.  This can be used to trigger a resurrection gameplay ability.
 		FGameplayEventData Payload;
-		Payload.EventTag = FAbilityGameplayTags::Get().Ability_GameplayEvent_Revive;
+		Payload.EventTag = CrimAbility::NativeGameplayTag::Ability_GameplayEvent_Revive;
 		Payload.Instigator = Instigator;
 		Payload.Target = AbilitySystemComponent->GetOwnerActor();
 		Payload.OptionalObject = EffectSpec.Def;

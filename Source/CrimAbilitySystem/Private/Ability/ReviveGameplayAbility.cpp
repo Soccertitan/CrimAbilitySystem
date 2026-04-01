@@ -3,16 +3,11 @@
 
 #include "Ability/ReviveGameplayAbility.h"
 
-#include "AbilityGameplayTags.h"
+#include "CrimAbilityNativeGameplayTags.h"
 #include "CrimAbilityLogChannels.h"
 #include "CrimAbilitySystemComponent.h"
-#include "NativeGameplayTags.h"
 #include "Attribute/HitPointsComponent.h"
 
-namespace ReviveTag
-{
-	UE_DEFINE_GAMEPLAY_TAG_STATIC(Ability_GameplayEvent_Revive, "Ability.GameplayEvent.Revive")
-}
 
 UReviveGameplayAbility::UReviveGameplayAbility()
 {
@@ -24,7 +19,7 @@ UReviveGameplayAbility::UReviveGameplayAbility()
 	{
 		// Add the ability trigger tag as default to the CDO.
 		FAbilityTriggerData TriggerData;
-		TriggerData.TriggerTag = ReviveTag::Ability_GameplayEvent_Revive;
+		TriggerData.TriggerTag = CrimAbility::NativeGameplayTag::Ability_GameplayEvent_Revive;
 		TriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
 		AbilityTriggers.Add(TriggerData);
 	}

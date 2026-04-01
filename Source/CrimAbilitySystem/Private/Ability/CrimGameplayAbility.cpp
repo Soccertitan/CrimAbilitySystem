@@ -9,7 +9,7 @@
 #include "CrimAbilityLogChannels.h"
 #include "CrimAbilitySystemComponent.h"
 #include "CrimGameplayEffectContext.h"
-#include "AbilityGameplayTags.h"
+#include "CrimAbilityNativeGameplayTags.h"
 #include "Ability/GameplayEffect/CrimCooldownGameplayEffect.h"
 #include "Ability/MessageAbilityActivateFailure.h"
 #include "Ability/Cost/AbilityCost.h"
@@ -179,7 +179,7 @@ void UCrimGameplayAbility::NativeOnAbilityFailedToActivate(const FGameplayTagCon
 				Message.FailureReason = *pUserFacingMessage;
 
 				UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(GetWorld());
-				MessageSystem.BroadcastMessage(FAbilityGameplayTags::Get().Message_Ability_Activate_Failure, Message);
+				MessageSystem.BroadcastMessage(CrimAbility::NativeGameplayTag::Message_Ability_Activate_Failure, Message);
 				bSimpleFailureFound = true;
 			}
 		}
@@ -205,7 +205,7 @@ bool UCrimGameplayAbility::CanActivateAbility(const FGameplayAbilitySpecHandle H
 	{
 		if (OptionalRelevantTags)
 		{
-			OptionalRelevantTags->AddTag(FAbilityGameplayTags::Get().Ability_ActivateFail_ActivationGroup);
+			OptionalRelevantTags->AddTag(CrimAbility::NativeGameplayTag::Ability_ActivateFail_ActivationGroup);
 		}
 		return false;
 	}
@@ -353,7 +353,7 @@ void UCrimGameplayAbility::ApplyCooldown(const FGameplayAbilitySpecHandle Handle
 	{
 		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(CooldownGE->GetClass(), GetAbilityLevel());
 		SpecHandle.Data.Get()->DynamicGrantedTags.AppendTags(*GetCooldownTags());
-		SpecHandle.Data.Get()->SetSetByCallerMagnitude(FAbilityGameplayTags::Get().SetByCaller_Cooldown, GetBaseCooldown());
+		SpecHandle.Data.Get()->SetSetByCallerMagnitude(CrimAbility::NativeGameplayTag::SetByCaller_Cooldown, GetBaseCooldown());
 		ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, SpecHandle);
 	}
 }
@@ -436,10 +436,10 @@ bool UCrimGameplayAbility::DoesAbilitySatisfyTagRequirements(const UAbilitySyste
 
 		if (AbilitySystemComponentTags.HasAny(AllBlockedTags))
 		{
-			if (OptionalRelevantTags && AbilitySystemComponentTags.HasTag(FAbilityGameplayTags::Get().Ability_State_Death))
+			if (OptionalRelevantTags && AbilitySystemComponentTags.HasTag(CrimAbility::NativeGameplayTag::Ability_State_Death))
 			{
 				// If player is dead and was rejected due to blocking tags, give that feedback
-				OptionalRelevantTags->AddTag(FAbilityGameplayTags::Get().Ability_ActivateFail_IsDead);
+				OptionalRelevantTags->AddTag(CrimAbility::NativeGameplayTag::Ability_ActivateFail_IsDead);
 			}
 			bBlocked = true;
 		}

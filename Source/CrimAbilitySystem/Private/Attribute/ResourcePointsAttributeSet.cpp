@@ -3,7 +3,7 @@
 
 #include "Attribute/ResourcePointsAttributeSet.h"
 
-#include "AbilityGameplayTags.h"
+#include "CrimAbilityNativeGameplayTags.h"
 #include "GameplayEffectExtension.h"
 #include "CrimAbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -104,7 +104,7 @@ void UResourcePointsAttributeSet::HandleDamage(const FGameplayEffectModCallbackD
 	const float LocalDamage = FMath::Abs(Magnitude);
 
 	SetCurrentPoints(FMath::Clamp(GetCurrentPoints() - LocalDamage, 0.f, GetMaxPoints()));
-	SendGameplayEvent(Data, FAbilityGameplayTags::Get().Ability_GameplayEvent_Damage_Resource);
+	SendGameplayEvent(Data, CrimAbility::NativeGameplayTag::Ability_GameplayEvent_Damage_Resource);
 }
 
 void UResourcePointsAttributeSet::HandleHealing(const FGameplayEffectModCallbackData& Data, float Magnitude)
@@ -112,5 +112,5 @@ void UResourcePointsAttributeSet::HandleHealing(const FGameplayEffectModCallback
 	const float LocalHealing = FMath::Abs(Magnitude);
 
 	SetCurrentPoints(FMath::Clamp(GetCurrentPoints() + LocalHealing, 0.f, GetMaxPoints()));
-	SendGameplayEvent(Data, FAbilityGameplayTags::Get().Ability_GameplayEvent_Healing_Resource);
+	SendGameplayEvent(Data, CrimAbility::NativeGameplayTag::Ability_GameplayEvent_Healing_Resource);
 }

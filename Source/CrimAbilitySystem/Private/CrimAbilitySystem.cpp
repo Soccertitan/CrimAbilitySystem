@@ -2,14 +2,11 @@
 
 #include "CrimAbilitySystem.h"
 
-#include "AbilityGameplayTags.h"
-
 #define LOCTEXT_NAMESPACE "FCrimAbilitySystemModule"
 
 void FCrimAbilitySystemModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-	FAbilityGameplayTags::InitializeNativeGameplayTags();
 }
 
 void FCrimAbilitySystemModule::ShutdownModule()
