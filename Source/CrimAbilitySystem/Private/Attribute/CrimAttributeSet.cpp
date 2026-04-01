@@ -11,23 +11,23 @@ UCrimAttributeSet::UCrimAttributeSet()
 {
 }
 
-UCrimAbilitySystemComponent* UCrimAttributeSet::GetCrimAbilitySystemComponent() const
-{
-	return Cast<UCrimAbilitySystemComponent>(GetOwningAbilitySystemComponent());
-}
-
 void UCrimAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
 	Super::PreAttributeChange(Attribute, NewValue);
 	
-	ClampAttributes(Attribute, NewValue);
+	ClampAttribute(Attribute, NewValue);
 }
 
 void UCrimAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
 {
 	Super::PreAttributeBaseChange(Attribute, NewValue);
 	
-	ClampAttributes(Attribute, NewValue);
+	ClampAttribute(Attribute, NewValue);
+}
+
+UCrimAbilitySystemComponent* UCrimAttributeSet::GetCrimAbilitySystemComponent() const
+{
+	return Cast<UCrimAbilitySystemComponent>(GetOwningAbilitySystemComponent());
 }
 
 void UCrimAttributeSet::SendGameplayEvent(const FGameplayEffectModCallbackData& Data, const FGameplayTag& EventTag)
@@ -40,8 +40,8 @@ void UCrimAttributeSet::SendGameplayEvent(const FGameplayEffectModCallbackData& 
 	Payload.Instigator = Data.EffectSpec.GetEffectContext().GetInstigator();
 	Payload.Target = AbilitySystemComponent->GetOwnerActor();
 	Payload.ContextHandle = Data.EffectSpec.GetEffectContext();
-	Payload.InstigatorTags = *Data.EffectSpec.CapturedSourceTags.GetAggregatedTags();
-	Payload.TargetTags = *Data.EffectSpec.CapturedTargetTags.GetAggregatedTags();
+	Payload.InstigatorTags = Data.EffectSpec.CapturedSourceTags.GetAggregatedTags() ? *Data.EffectSpec.CapturedSourceTags.GetAggregatedTags() : FGameplayTagContainer();
+	Payload.TargetTags = Data.EffectSpec.CapturedTargetTags.GetAggregatedTags() ? *Data.EffectSpec.CapturedTargetTags.GetAggregatedTags() : FGameplayTagContainer();
 	Payload.EventMagnitude = Data.EvaluatedData.Magnitude;
 
 	FScopedPredictionWindow NewScopedWindow(AbilitySystemComponent, true);

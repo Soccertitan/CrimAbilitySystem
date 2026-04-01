@@ -16,26 +16,23 @@ class CRIMABILITYSYSTEM_API UHitPointsAttributeSet : public UCrimAttributeSet
 	GENERATED_BODY()
 
 public:
-
 	UHitPointsAttributeSet();
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 
-	ATTRIBUTE_ACCESSORS(UHitPointsAttributeSet, CurrentPoints);
-	ATTRIBUTE_ACCESSORS(UHitPointsAttributeSet, MaxPoints);
-	ATTRIBUTE_ACCESSORS(UHitPointsAttributeSet, Healing);
-	ATTRIBUTE_ACCESSORS(UHitPointsAttributeSet, Damage);
+	ATTRIBUTE_ACCESSORS(ThisClass, CurrentPoints);
+	ATTRIBUTE_ACCESSORS(ThisClass, MaxPoints);
+	ATTRIBUTE_ACCESSORS(ThisClass, Healing);
+	ATTRIBUTE_ACCESSORS(ThisClass, Damage);
 
 protected:
-
 	UFUNCTION()
 	void OnRep_CurrentPoints(const FGameplayAttributeData& OldValue);
 	UFUNCTION()
 	void OnRep_MaxPoints(const FGameplayAttributeData& OldValue);
 
-	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
-	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
-
-	virtual void ClampAttributes(const FGameplayAttribute& Attribute, float& NewValue) const override;
+	virtual void ClampAttribute(const FGameplayAttribute& Attribute, float& NewValue) const override;
 
 	virtual void HandleDamage(const FGameplayEffectModCallbackData& Data, float Magnitude);
 	virtual void HandleHealing(const FGameplayEffectModCallbackData& Data, float Magnitude);
@@ -43,26 +40,23 @@ protected:
 private:
 
 	/**
-	 * The current HitPoints attribute. The value will be capped by the MaxHitPoints attribute.
+	 * The CurrentPoints Attribute is clamped between 0.f and MaxPoints.
 	 */
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentPoints, Category = "Hit Points Attribute Set", Meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentPoints, Category = "Attribute", Meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData CurrentPoints;
 
-	/**
-	 * The current MaxHitPoints attribute. MaxHitPoints is an attribute since gameplay effects can modify it.
-	 */
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxPoints, Category = "Hit Points Attribute Set", Meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxPoints, Category = "Attribute", Meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData MaxPoints;
 
 	// -------------------------------------------------------------------
 	//	Meta Attribute (please keep attributes that aren't 'stateful' below 
 	// -------------------------------------------------------------------
 
-	// Incoming healing. This is mapped directly to +Health
-	UPROPERTY(BlueprintReadOnly, Category="Hit Points Attribute Set", Meta=(AllowPrivateAccess=true))
+	// Incoming healing. This is mapped directly to +CurrentPoints
+	UPROPERTY(BlueprintReadOnly, Category="Attribute", Meta=(AllowPrivateAccess=true))
 	FGameplayAttributeData Healing;
 
-	// Incoming damage. This is mapped directly to -Health
-	UPROPERTY(BlueprintReadOnly, Category="Hit Points Attribute Set", Meta=(AllowPrivateAccess=true))
+	// Incoming damage. This is mapped directly to -CurrentPoints
+	UPROPERTY(BlueprintReadOnly, Category="Attribute", Meta=(AllowPrivateAccess=true))
 	FGameplayAttributeData Damage;
 };

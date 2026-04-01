@@ -36,14 +36,14 @@ class CRIMABILITYSYSTEM_API UCrimAttributeSet : public UAttributeSet
 
 public:
 	UCrimAttributeSet();
+	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
 
 	UCrimAbilitySystemComponent* GetCrimAbilitySystemComponent() const;
 
 protected:
 	
-	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
-	virtual void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
-	virtual void ClampAttributes(const FGameplayAttribute& Attribute, float& NewValue) const {}
+	virtual void ClampAttribute(const FGameplayAttribute& Attribute, float& NewValue) const {}
 	
 	/** 
 	 * Sends a gameplay event to the owner and instigator of the callback. Filling in the EventData. 

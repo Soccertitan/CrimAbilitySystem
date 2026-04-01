@@ -19,18 +19,8 @@ void UHitPointsAttributeSet::GetLifetimeReplicatedProps(TArray<class FLifetimePr
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(UHitPointsAttributeSet, CurrentPoints, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(UHitPointsAttributeSet, MaxPoints, COND_None, REPNOTIFY_Always);
-}
-
-void UHitPointsAttributeSet::OnRep_CurrentPoints(const FGameplayAttributeData& OldValue)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UHitPointsAttributeSet, CurrentPoints, OldValue);
-}
-
-void UHitPointsAttributeSet::OnRep_MaxPoints(const FGameplayAttributeData& OldValue)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UHitPointsAttributeSet, MaxPoints, OldValue);
+	DOREPLIFETIME_CONDITION_NOTIFY(ThisClass, CurrentPoints, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ThisClass, MaxPoints, COND_None, REPNOTIFY_Always);
 }
 
 void UHitPointsAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
@@ -84,7 +74,7 @@ void UHitPointsAttributeSet::PostAttributeChange(const FGameplayAttribute& Attri
 
 	if (Attribute == GetMaxPointsAttribute())
 	{
-		// Make sure current HitPoints is not greater than the new MaxHitPoints.
+		// Make sure CurrentPoints is not greater than the new MaxPoints.
 		if (GetCurrentPoints() > NewValue)
 		{
 			GetOwningAbilitySystemComponentChecked()->SetNumericAttributeBase(GetCurrentPointsAttribute(), NewValue);
@@ -92,16 +82,26 @@ void UHitPointsAttributeSet::PostAttributeChange(const FGameplayAttribute& Attri
 	}
 }
 
-void UHitPointsAttributeSet::ClampAttributes(const FGameplayAttribute& Attribute, float& NewValue) const
+void UHitPointsAttributeSet::OnRep_CurrentPoints(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(ThisClass, CurrentPoints, OldValue);
+}
+
+void UHitPointsAttributeSet::OnRep_MaxPoints(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(ThisClass, MaxPoints, OldValue);
+}
+
+void UHitPointsAttributeSet::ClampAttribute(const FGameplayAttribute& Attribute, float& NewValue) const
 {
 	if (Attribute == GetCurrentPointsAttribute())
 	{
-		// Do not allow health to go negative or above max health.
+		// Do not allow CurrentPoints to go negative or above MaxPoints.
 		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxPoints());
 	}
 	else if (Attribute == GetMaxPointsAttribute())
 	{
-		// Do not allow max health to drop below 1.
+		// Do not allow MaxPoints to drop below 1.
 		NewValue = FMath::Max(NewValue, 1.0f);
 	}
 }
