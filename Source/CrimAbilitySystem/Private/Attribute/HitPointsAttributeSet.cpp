@@ -111,7 +111,6 @@ void UHitPointsAttributeSet::HandleDamage(const FGameplayEffectModCallbackData& 
 	const float LocalDamage = FMath::Abs(Magnitude);
 
 	SetCurrentPoints(FMath::Clamp(GetCurrentPoints() - LocalDamage, 0.f, GetMaxPoints()));
-	SendGameplayEvent(Data, CrimAbility::NativeGameplayTag::Ability_GameplayEvent_Damage_HitPoints);
 }
 
 void UHitPointsAttributeSet::HandleHealing(const FGameplayEffectModCallbackData& Data, float Magnitude)
@@ -119,5 +118,4 @@ void UHitPointsAttributeSet::HandleHealing(const FGameplayEffectModCallbackData&
 	const float LocalHealing = FMath::Abs(Magnitude);
 
 	SetCurrentPoints(FMath::Clamp(GetCurrentPoints() + LocalHealing, 0.f, GetMaxPoints()));
-	SendGameplayEvent(Data, CrimAbility::NativeGameplayTag::Ability_GameplayEvent_Healing_HitPoints);
 }

@@ -10,13 +10,7 @@ namespace CrimAbility::NativeGameplayTag
 	
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_ActivateFail_ActivationGroup, "Ability.ActivateFail.ActivationGroup", "Ability Failed due to activation group requirements.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_ActivateFail_IsDead, "Ability.ActivateFail.IsDead", "Ability failed to activate due to death.");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_GameplayEvent_Damage, "Ability.GameplayEvent.Damage", "Root tag for damage events.");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_GameplayEvent_Damage_HitPoints, "Ability.GameplayEvent.Damage.HitPoints", "Triggers an event when HitPoints AttributeSet was tried to be damaged.");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_GameplayEvent_Damage_Resource, "Ability.GameplayEvent.Damage.Resource", "Triggers an event when Resource AttributeSet was tried to be damaged.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_GameplayEvent_Death, "Ability.GameplayEvent.Death", "Triggers death gameplay abilities.");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_GameplayEvent_Healing, "Ability.GameplayEvent.Healing", "Root tag for healing events.");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_GameplayEvent_Healing_HitPoints, "Ability.GameplayEvent.Healing.HitPoints", "Triggers an event when HitPoints AttributeSet was tried to be healed.");
-	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_GameplayEvent_Healing_Resource, "Ability.GameplayEvent.Healing.Resource", "Triggers an event when Resource AttributeSet was tried to be healed.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_GameplayEvent_Revive, "Ability.GameplayEvent.Revive", "Triggers revive gameplay abilities.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_InputBlocked, "Ability.InputBlocked", "Blocks abilities from being activated by player input.");
 	
