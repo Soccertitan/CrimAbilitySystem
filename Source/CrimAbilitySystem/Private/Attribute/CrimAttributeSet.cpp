@@ -30,7 +30,7 @@ UCrimAbilitySystemComponent* UCrimAttributeSet::GetCrimAbilitySystemComponent() 
 	return Cast<UCrimAbilitySystemComponent>(GetOwningAbilitySystemComponent());
 }
 
-void UCrimAttributeSet::SendGameplayEvent(const FGameplayEffectModCallbackData& Data, const FGameplayTag& EventTag)
+void UCrimAttributeSet::SendGameplayEvent(const FGameplayTag& EventTag, const FGameplayEffectModCallbackData& Data, const float Magnitude)
 {
 #if WITH_SERVER_CODE
 	UAbilitySystemComponent* AbilitySystemComponent = GetOwningAbilitySystemComponentChecked();
@@ -42,11 +42,9 @@ void UCrimAttributeSet::SendGameplayEvent(const FGameplayEffectModCallbackData& 
 	Payload.ContextHandle = Data.EffectSpec.GetEffectContext();
 	Payload.InstigatorTags = Data.EffectSpec.CapturedSourceTags.GetAggregatedTags() ? *Data.EffectSpec.CapturedSourceTags.GetAggregatedTags() : FGameplayTagContainer();
 	Payload.TargetTags = Data.EffectSpec.CapturedTargetTags.GetAggregatedTags() ? *Data.EffectSpec.CapturedTargetTags.GetAggregatedTags() : FGameplayTagContainer();
-	Payload.EventMagnitude = Data.EvaluatedData.Magnitude;
+	Payload.EventMagnitude = Magnitude;
 
 	FScopedPredictionWindow NewScopedWindow(AbilitySystemComponent, true);
 	AbilitySystemComponent->HandleGameplayEvent(Payload.EventTag, &Payload);
-	
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Data.EffectSpec.GetEffectContext().GetInstigator(), Payload.EventTag, Payload);
 #endif
 }

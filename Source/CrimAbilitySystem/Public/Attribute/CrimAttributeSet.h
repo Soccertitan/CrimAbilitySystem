@@ -44,10 +44,10 @@ public:
 protected:
 	
 	virtual void ClampAttribute(const FGameplayAttribute& Attribute, float& NewValue) const {}
-	
+
 	/** 
-	 * Sends a gameplay event to the owner and instigator of the callback. Filling in the EventData. 
+	 * Sends a gameplay event to the owner ASC.
 	 * @note Only runs in server context.
 	 */
-	void SendGameplayEvent(const FGameplayEffectModCallbackData& Data, const FGameplayTag& EventTag);
+	void SendGameplayEvent(const FGameplayTag& EventTag, const FGameplayEffectModCallbackData& Data, const float Magnitude);
 };

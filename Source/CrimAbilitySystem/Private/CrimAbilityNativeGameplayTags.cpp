@@ -12,6 +12,8 @@ namespace CrimAbility::NativeGameplayTag
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_ActivateFail_IsDead, "Ability.ActivateFail.IsDead", "Ability failed to activate due to death.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_GameplayEvent_Death, "Ability.GameplayEvent.Death", "Triggers death gameplay abilities.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_GameplayEvent_Revive, "Ability.GameplayEvent.Revive", "Triggers revive gameplay abilities.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_GameplayEvent_Damage_HitPoints, "Ability.GameplayEvent.Damage.HitPoints", "Called when the HitPoints attribute set has damage set.");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_GameplayEvent_Healing_HitPoints, "Ability.GameplayEvent.Healing.HitPoints", "Called when the HitPoints attribute set has healing set.");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_InputBlocked, "Ability.InputBlocked", "Blocks abilities from being activated by player input.");
 	
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_State, "Ability.State", "Root tag for various states the ASC/Ability can have.");
