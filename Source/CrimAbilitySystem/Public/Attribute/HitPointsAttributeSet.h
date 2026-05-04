@@ -38,10 +38,7 @@ protected:
 	virtual void HandleHealing(const FGameplayEffectModCallbackData& Data, float Magnitude);
 
 private:
-
-	/**
-	 * The CurrentPoints Attribute is clamped between 0.f and MaxPoints.
-	 */
+	/** The CurrentPoints Attribute is clamped between 0.f and MaxPoints. */
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentPoints, Category = "Attribute", Meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData CurrentPoints;
 
@@ -52,11 +49,11 @@ private:
 	//	Meta Attribute (please keep attributes that aren't 'stateful' below 
 	// -------------------------------------------------------------------
 
-	// Incoming healing. This is mapped directly to +CurrentPoints
+	// Incoming healing. If negative, will cause damage instead.
 	UPROPERTY(BlueprintReadOnly, Category="Attribute", Meta=(AllowPrivateAccess=true))
 	FGameplayAttributeData Healing;
 
-	// Incoming damage. This is mapped directly to -CurrentPoints
+	// Incoming damage. If negative will cause healing instead.
 	UPROPERTY(BlueprintReadOnly, Category="Attribute", Meta=(AllowPrivateAccess=true))
 	FGameplayAttributeData Damage;
 };
