@@ -126,6 +126,9 @@ void UCrimAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AAc
 	FGameplayAbilityActorInfo* ActorInfo = AbilityActorInfo.Get();
 	check(ActorInfo);
 	check(InOwnerActor);
+	
+	bool OwnerChanged = (InOwnerActor != AbilityActorInfo->OwnerActor);
+	bool AvatarChanged = (InAvatarActor != AbilityActorInfo->AvatarActor);
 
 	Super::InitAbilityActorInfo(InOwnerActor, InAvatarActor);
 	
@@ -134,22 +137,23 @@ void UCrimAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AAc
 		GlobalAbilitySystem->RegisterAbilitySystemComponent(this);
 	}
 
-	TArray<UActorComponent*> ActorComponents = InOwnerActor->GetComponentsByInterface(UCrimAbilitySystemInterface::StaticClass());
-	for (UActorComponent*& Component : ActorComponents)
+	if (OwnerChanged)
 	{
-		ICrimAbilitySystemInterface::Execute_InitializeWithAbilitySystem(Component, this);
-	}
-
-	if (InOwnerActor != InAvatarActor)
-	{
-		ActorComponents = InAvatarActor->GetComponentsByInterface(UCrimAbilitySystemInterface::StaticClass());
+		TArray<UActorComponent*> ActorComponents = InOwnerActor->GetComponentsByInterface(UCrimAbilitySystemInterface::StaticClass());
 		for (UActorComponent*& Component : ActorComponents)
 		{
 			ICrimAbilitySystemInterface::Execute_InitializeWithAbilitySystem(Component, this);
 		}
 	}
 
-	TryActivateAbilitiesOnSpawn();
+	if (InOwnerActor != InAvatarActor && AvatarChanged)
+	{
+		TArray<UActorComponent*> ActorComponents = InAvatarActor->GetComponentsByInterface(UCrimAbilitySystemInterface::StaticClass());
+		for (UActorComponent*& Component : ActorComponents)
+		{
+			ICrimAbilitySystemInterface::Execute_InitializeWithAbilitySystem(Component, this);
+		}
+	}
 }
 
 void UCrimAbilitySystemComponent::CancelAbilitiesByFunc(TShouldCancelAbilityFunc ShouldCancelFunc, bool bReplicateCancelAbility)
