@@ -115,7 +115,7 @@ void UHitPointsComponent::StartDeath()
 	AActor* Owner = GetOwner();
 	check(Owner);
 
-	OnDeathStartedDelegate.Broadcast(Owner);
+	OnDeathStartedDelegate.Broadcast();
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, DeathState, this);
 }
 
@@ -133,7 +133,7 @@ void UHitPointsComponent::FinishDeath()
 	AActor* Owner = GetOwner();
 	check(Owner);
 
-	OnDeathFinishedDelegate.Broadcast(Owner);
+	OnDeathFinishedDelegate.Broadcast();
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, DeathState, this);
 }
@@ -152,7 +152,7 @@ void UHitPointsComponent::StartRevive()
 	AActor* Owner = GetOwner();
 	check(Owner);
 
-	OnReviveStartedDelegate.Broadcast(Owner);
+	OnReviveStartedDelegate.Broadcast();
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, DeathState, this);
 }
@@ -171,7 +171,7 @@ void UHitPointsComponent::FinishRevive()
 	AActor* Owner = GetOwner();
 	check(Owner);
 
-	OnReviveFinishedDelegate.Broadcast(Owner);
+	OnReviveFinishedDelegate.Broadcast();
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, DeathState, this);
 }
@@ -199,7 +199,7 @@ void UHitPointsComponent::OnHitPointsUpdated(const FOnAttributeChangeData& Data)
 	const FGameplayEffectSpec& EffectSpec = Data.GEModData ? Data.GEModData->EffectSpec : FGameplayEffectSpec();
 	const float Magnitude = Data.GEModData ? Data.GEModData->EvaluatedData.Magnitude : FMath::Abs(Data.OldValue - Data.NewValue);
 
-	OnHitPointsUpdatedDelegate.Broadcast(this, Data.OldValue, Data.NewValue, Instigator, EffectCauser);
+	OnHitPointsUpdatedDelegate.Broadcast(Data.OldValue, Data.NewValue, Instigator, EffectCauser);
 	
 	if (Data.NewValue <= 0.f && Data.OldValue > 0.f)
 	{
@@ -223,7 +223,7 @@ void UHitPointsComponent::OnMaxHitPointsUpdated(const FOnAttributeChangeData& Da
 		Instigator = Data.GEModData->EffectSpec.GetEffectContext().Get()->GetInstigator();
 		EffectCauser = Data.GEModData->EffectSpec.GetEffectContext().Get()->GetEffectCauser();
 	}
-	OnMaxHitPointsUpdatedDelegate.Broadcast(this, Data.OldValue, Data.NewValue, Instigator, EffectCauser);
+	OnMaxHitPointsUpdatedDelegate.Broadcast(Data.OldValue, Data.NewValue, Instigator, EffectCauser);
 }
 
 void UHitPointsComponent::OnOutOfHitPoints(AActor* Instigator, const FGameplayEffectSpec& EffectSpec, float Magnitude)

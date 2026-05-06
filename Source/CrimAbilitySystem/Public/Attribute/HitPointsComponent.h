@@ -12,8 +12,8 @@ struct FGameplayEffectSpec;
 class UCrimAbilitySystemComponent;
 class UHitPointsAttributeSet;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHitPointsDeathEventSignature, AActor*, OwningActor);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FHitPointsAttributeUpdatedSignature, UHitPointsComponent*, HitPointsComponent, float, OldValue, float, NewValue, AActor*, Instigator, AActor*, EffectCauser);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHitPointsDeathEventSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FHitPointsAttributeUpdatedSignature, float, OldValue, float, NewValue, AActor*, Instigator, AActor*, EffectCauser);
 
 /**
  * EDeathState: Defines the current state of death.
@@ -113,7 +113,6 @@ public:
 	FHitPointsDeathEventSignature OnReviveFinishedDelegate;
 
 protected:
-
 	virtual void OnUnregister() override;
 
 	void ClearGameplayTags();
