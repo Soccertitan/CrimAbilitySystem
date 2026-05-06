@@ -33,28 +33,32 @@ UHitPointsComponent* UHitPointsComponent::FindHitPointsComponent(const AActor* A
 	return Actor ? Actor->FindComponentByClass<UHitPointsComponent>() : nullptr;
 }
 
-void UHitPointsComponent::InitializeWithAbilitySystem_Implementation(UCrimAbilitySystemComponent* InASC)
+void UHitPointsComponent::SetCrimAbilitySystem_Implementation(UCrimAbilitySystemComponent* InAbilitySystemComponent)
 {
 	AActor* Owner = GetOwner();
 	check(Owner);
-
-	if (AbilitySystemComponent)
-	{
-		UE_LOG(LogCrimAbilitySystem, Log, TEXT("HitPointsComponent: Hit Points component for owner [%s] has already been initialized with an ability system."), *GetNameSafe(Owner));
-		return;
-	}
-
-	AbilitySystemComponent = InASC;
-	if (!AbilitySystemComponent)
-	{
-		UE_LOG(LogCrimAbilitySystem, Error, TEXT("HitPointsComponent: Cannot initialize health component for owner [%s] with NULL ability system."), *GetNameSafe(Owner));
-		return;
-	}
 	
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UHitPointsAttributeSet::GetCurrentPointsAttribute()).AddUObject(this, &UHitPointsComponent::OnHitPointsUpdated);
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UHitPointsAttributeSet::GetMaxPointsAttribute()).AddUObject(this, &UHitPointsComponent::OnMaxHitPointsUpdated);
+	if (AbilitySystemComponent != InAbilitySystemComponent)
+	{
+		if (AbilitySystemComponent)
+		{
+			AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UHitPointsAttributeSet::GetCurrentPointsAttribute()).RemoveAll(this);
+			AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UHitPointsAttributeSet::GetMaxPointsAttribute()).RemoveAll(this);
+		}
+
+		AbilitySystemComponent = InAbilitySystemComponent;
+		
+		if (!AbilitySystemComponent)
+		{
+			UE_LOG(LogCrimAbilitySystem, Error, TEXT("HitPointsComponent: Cannot initialize health component for owner [%s] with NULL ability system."), *GetNameSafe(Owner));
+			return;
+		}
 	
-	UE_LOG(LogCrimAbilitySystem, Log, TEXT("HitPointsComponent: has been initialized for owner [%s]."), *GetNameSafe(Owner));
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UHitPointsAttributeSet::GetCurrentPointsAttribute()).AddUObject(this, &UHitPointsComponent::OnHitPointsUpdated);
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UHitPointsAttributeSet::GetMaxPointsAttribute()).AddUObject(this, &UHitPointsComponent::OnMaxHitPointsUpdated);
+	
+		UE_LOG(LogCrimAbilitySystem, Log, TEXT("HitPointsComponent: has been initialized for owner [%s]."), *GetNameSafe(Owner));
+	}
 }
 
 void UHitPointsComponent::UninitializeFromAbilitySystem()

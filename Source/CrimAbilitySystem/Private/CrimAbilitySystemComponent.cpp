@@ -142,7 +142,7 @@ void UCrimAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AAc
 		TArray<UActorComponent*> ActorComponents = InOwnerActor->GetComponentsByInterface(UCrimAbilitySystemInterface::StaticClass());
 		for (UActorComponent*& Component : ActorComponents)
 		{
-			ICrimAbilitySystemInterface::Execute_InitializeWithAbilitySystem(Component, this);
+			ICrimAbilitySystemInterface::Execute_SetCrimAbilitySystem(Component, this);
 		}
 	}
 
@@ -151,7 +151,7 @@ void UCrimAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AAc
 		TArray<UActorComponent*> ActorComponents = InAvatarActor->GetComponentsByInterface(UCrimAbilitySystemInterface::StaticClass());
 		for (UActorComponent*& Component : ActorComponents)
 		{
-			ICrimAbilitySystemInterface::Execute_InitializeWithAbilitySystem(Component, this);
+			ICrimAbilitySystemInterface::Execute_SetCrimAbilitySystem(Component, this);
 		}
 	}
 }

@@ -15,7 +15,7 @@ class UCrimAbilitySystemInterface : public UInterface
 };
 
 /**
- * Add this interface to ActorComponents to respond when the ASC is initialized.
+ * Add this interface to ActorComponents to respond when the AbilitySystemComponent is initialized.
  */
 class CRIMABILITYSYSTEM_API ICrimAbilitySystemInterface
 {
@@ -24,9 +24,9 @@ class CRIMABILITYSYSTEM_API ICrimAbilitySystemInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	/**
-	 * When InitActorInfo is called, all components on the AvatarActor and OwnerActor can respond when the ASC is configured.
-	 * @param NewAbilitySystemComponent The ability system component to initialize with.
+	 * Called in InitActorInfo for ActorComponents on the AvatarActor and OwnerActor.
+	 * @param AbilitySystemComponent The ability system component to initialize with.
 	 */
-	UFUNCTION(BlueprintNativeEvent)
-	void InitializeWithAbilitySystem(UCrimAbilitySystemComponent* NewAbilitySystemComponent);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void SetCrimAbilitySystem(UCrimAbilitySystemComponent* AbilitySystemComponent);
 };

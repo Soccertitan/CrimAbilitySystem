@@ -37,12 +37,10 @@ class CRIMABILITYSYSTEM_API UHitPointsComponent : public UActorComponent, public
 
 public:
 	UHitPointsComponent();
-
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
-	//~ ICrimAbilitySystemInterface
-	virtual void InitializeWithAbilitySystem_Implementation(UCrimAbilitySystemComponent* NewAbilitySystemComponent) override;
-	//~ end ICrimAbilitySystemInterface
+	// ICrimAbilitySystemInterface
+	virtual void SetCrimAbilitySystem_Implementation(UCrimAbilitySystemComponent* AbilitySystemComponent) override;
 	
 	// Returns the Hit Points component if one exists on the specified actor.
 	UFUNCTION(BlueprintPure, Category = "Crim Ability System|HitPoints")
