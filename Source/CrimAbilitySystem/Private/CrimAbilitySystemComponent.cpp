@@ -154,6 +154,11 @@ void UCrimAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AAc
 			ICrimAbilitySystemInterface::Execute_SetCrimAbilitySystem(Component, this);
 		}
 	}
+	
+	if (AvatarChanged && InAvatarActor != nullptr)
+	{
+		TryActivateAbilitiesOnSpawn();
+	}
 }
 
 void UCrimAbilitySystemComponent::CancelAbilitiesByFunc(TShouldCancelAbilityFunc ShouldCancelFunc, bool bReplicateCancelAbility)

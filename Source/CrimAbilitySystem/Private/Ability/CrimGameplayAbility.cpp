@@ -81,8 +81,6 @@ APlayerController* UCrimGameplayAbility::GetPlayerControllerFromActorInfo() cons
 
 void UCrimGameplayAbility::TryActivateAbilityOnSpawn(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) const
 {
-	/*
-	// Trying something different where the avatar actor does not need to be set.
 	const bool bIsPredicting = (CurrentActivationInfo.ActivationMode == EGameplayAbilityActivationMode::Predicting);
 
 	// Try to activate if activation policy is on spawn.
@@ -105,12 +103,6 @@ void UCrimGameplayAbility::TryActivateAbilityOnSpawn(const FGameplayAbilityActor
 				ASC->TryActivateAbility(Spec.Handle);
 			}
 		}
-	}
-	*/
-	
-	if (!Spec.IsActive() && ActivationPolicy == EAbilityActivationPolicy::OnSpawn)
-	{
-		ActorInfo->AbilitySystemComponent.Get()->TryActivateAbility(Spec.Handle);
 	}
 }
 
