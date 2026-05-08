@@ -4,25 +4,26 @@
 
 #include "CoreMinimal.h"
 #include "AbilityInputTypes.h"
+#include "CrimAbilitySystemInterface.h"
 #include "GameplayAbilitySpecHandle.h"
 #include "Components/ActorComponent.h"
 #include "AbilityInputManagerComponent.generated.h"
 
 class UCrimAbilitySystemComponent;
-DECLARE_MULTICAST_DELEGATE_TwoParams(FAbilityInputManagerAbilityInputItemSignature, UAbilityInputManagerComponent* /*this AIMC*/, const FAbilityInputItem& /* AbilityMapItem */);
+DECLARE_MULTICAST_DELEGATE_OneParam(FAbilityInputManagerAbilityInputItemSignature, const FAbilityInputItem& /* AbilityMapItem */);
 
 /**
  * Manages inputs for abilities and activate abilities for inputs.
  */
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class CRIMABILITYSYSTEM_API UAbilityInputManagerComponent : public UActorComponent
+class CRIMABILITYSYSTEM_API UAbilityInputManagerComponent : public UActorComponent, public ICrimAbilitySystemInterface
 {
 	GENERATED_BODY()
 
 public:
 	UAbilityInputManagerComponent();
 
-	void InitializeAbilitySystemComponent(UCrimAbilitySystemComponent* InAbilitySystemComponent);
+	virtual void SetCrimAbilitySystem_Implementation(UCrimAbilitySystemComponent* AbilitySystemComponent) override;
 
 	/** Called when the first time an Input is added to the container. */
 	FAbilityInputManagerAbilityInputItemSignature OnAbilityInputAddedDelegate;

@@ -15,26 +15,26 @@ UAbilityInputManagerComponent::UAbilityInputManagerComponent()
 	bCachedIsNetSimulated = false;
 }
 
-void UAbilityInputManagerComponent::InitializeAbilitySystemComponent(UCrimAbilitySystemComponent* InAbilitySystemComponent)
+void UAbilityInputManagerComponent::SetCrimAbilitySystem_Implementation(UCrimAbilitySystemComponent* InAbilitySystemComponent)
 {
 	AbilitySystemComponent = InAbilitySystemComponent;
 }
 
 void UAbilityInputManagerComponent::OnAbilityInputAdded(const FAbilityInputItem& Item)
 {
-	OnAbilityInputAddedDelegate.Broadcast(this, Item);
+	OnAbilityInputAddedDelegate.Broadcast(Item);
 }
 
 void UAbilityInputManagerComponent::OnAbilityInputChanged(const FAbilityInputItem& Item)
 {
 	InputTagReleased(Item.InputTag);
-	OnAbilityInputChangedDelegate.Broadcast(this, Item);
+	OnAbilityInputChangedDelegate.Broadcast(Item);
 }
 
 void UAbilityInputManagerComponent::OnAbilityInputRemoved(const FAbilityInputItem& Item)
 {
 	InputTagReleased(Item.InputTag);
-	OnAbilityInputRemovedDelegate.Broadcast(this, Item);
+	OnAbilityInputRemovedDelegate.Broadcast(Item);
 }
 
 void UAbilityInputManagerComponent::InputPressed(const TSubclassOf<UGameplayAbility>& AbilityClass)
