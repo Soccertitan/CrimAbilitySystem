@@ -5,6 +5,7 @@
 
 #include "AbilitySystemGlobals.h"
 #include "CrimAbilitySystemComponent.h"
+#include "CrimGameplayAbilityTargetData.h"
 #include "CrimGameplayEffectContext.h"
 #include "Input/AbilityInputManagerComponent.h"
 #include "Input/AbilityInputManagerInterface.h"
@@ -98,6 +99,54 @@ FInstancedStruct UCrimAbilitySystemBlueprintFunctionLibrary::FindCustomDataFragm
 			{
 				return Fragment;
 			}
+		}
+	}
+	return FInstancedStruct();
+}
+
+FGameplayAbilityTargetDataHandle UCrimAbilitySystemBlueprintFunctionLibrary::MakeCrimGameplayAbilityTargetData(const FCrimGameplayAbilityTargetData& Data)
+{
+	FGameplayAbilityTargetDataHandle Result;
+	FCrimGameplayAbilityTargetData* TargetData = new FCrimGameplayAbilityTargetData();
+	TargetData->CustomDataFragments = Data.CustomDataFragments;
+	Result.Add(TargetData);
+	return Result;
+}
+
+void UCrimAbilitySystemBlueprintFunctionLibrary::AppendCrimGameplayAbilityTargetData(
+	const FGameplayAbilityTargetDataHandle& Handle, const FCrimGameplayAbilityTargetData& Data, int32 Index)
+{
+	if (Handle.Data.IsValidIndex(Index))
+	{
+		FCrimGameplayAbilityTargetData* TargetData = static_cast<FCrimGameplayAbilityTargetData*>(Handle.Data[Index].Get());
+		if (TargetData)
+		{
+			TargetData->CustomDataFragments.Append(Data.CustomDataFragments);
+		}
+	}
+}
+
+FCrimGameplayAbilityTargetData UCrimAbilitySystemBlueprintFunctionLibrary::GetCrimGameplayAbilityTargetData(const FGameplayAbilityTargetDataHandle& Handle, int32 Index)
+{
+	if (Handle.Data.IsValidIndex(Index))
+	{
+		FCrimGameplayAbilityTargetData* Data = static_cast<FCrimGameplayAbilityTargetData*>(Handle.Data[Index].Get());
+		if (Data)
+		{
+			return *Data;
+		}
+	}
+	return FCrimGameplayAbilityTargetData();
+}
+
+FInstancedStruct UCrimAbilitySystemBlueprintFunctionLibrary::FindCustomDataFragmentFromTargetData(
+	const UScriptStruct* FragmentType, const FCrimGameplayAbilityTargetData& Data)
+{
+	for (const auto& Fragment : Data.CustomDataFragments)
+	{
+		if (Fragment.GetScriptStruct() == FragmentType)
+		{
+			return Fragment;
 		}
 	}
 	return FInstancedStruct();

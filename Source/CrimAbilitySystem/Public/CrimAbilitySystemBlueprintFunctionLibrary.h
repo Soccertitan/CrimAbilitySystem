@@ -6,6 +6,8 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "CrimAbilitySystemBlueprintFunctionLibrary.generated.h"
 
+struct FCrimGameplayAbilityTargetData;
+struct FGameplayAbilityTargetDataHandle;
 struct FGameplayEffectContextHandle;
 struct FInstancedStruct;
 struct FGameplayTagContainer;
@@ -43,4 +45,16 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category = "Ability|Effect Context")
 	static FInstancedStruct FindCustomDataFragmentFromContext(const UScriptStruct* FragmentType, const FGameplayEffectContextHandle& EffectContext);
+	
+	UFUNCTION(BlueprintCallable, Category = "Ability|TargetData")
+	static FGameplayAbilityTargetDataHandle MakeCrimGameplayAbilityTargetData(const FCrimGameplayAbilityTargetData& Data);
+	
+	UFUNCTION(BlueprintCallable, Category = "Ability|TargetData")
+	static void AppendCrimGameplayAbilityTargetData(const FGameplayAbilityTargetDataHandle& Handle, const FCrimGameplayAbilityTargetData& Data, int32 Index);
+	
+	UFUNCTION(BlueprintPure, Category = "Ability|TargetData")
+	static FCrimGameplayAbilityTargetData GetCrimGameplayAbilityTargetData(const FGameplayAbilityTargetDataHandle& Handle, int32 Index);
+	
+	UFUNCTION(BlueprintPure, Category = "Ability|TargetData")
+	static FInstancedStruct FindCustomDataFragmentFromTargetData(const UScriptStruct* FragmentType, const FCrimGameplayAbilityTargetData& Data);
 };
