@@ -12,7 +12,7 @@
  * The slot an ability can be placed in.
  */
 USTRUCT(BlueprintType)
-struct FAbilityInputSlot
+struct CRIMABILITYSYSTEM_API FAbilityInputSlot
 {
 	GENERATED_BODY()
 	

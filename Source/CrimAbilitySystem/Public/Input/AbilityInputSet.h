@@ -10,7 +10,7 @@
 class UAbilityInput;
 
 USTRUCT()
-struct FAbilityInputItem
+struct CRIMABILITYSYSTEM_API FAbilityInputItem
 {
 	GENERATED_BODY()
 	

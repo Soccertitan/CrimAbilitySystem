@@ -10,7 +10,7 @@
 
 /** Used internally by the AbilityInputManagerComponent to store the handle and EventData. */
 USTRUCT()
-struct FAbilityInputHandle
+struct CRIMABILITYSYSTEM_API FAbilityInputHandle
 {
 	GENERATED_BODY()
 	
