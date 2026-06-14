@@ -37,7 +37,7 @@ bool UCrimAbilitySystemComponent::TryActivateAbilityByClassWithEventData(TSubcla
 		if (Spec.Ability == InAbilityCDO)
 		{
 
-			bSuccess |= CrimTryActivateAbility(Spec.Handle, &EventData, bAllowRemoteActivation);
+			bSuccess |= TryActivateAbilityWithEventData(Spec.Handle, &EventData, bAllowRemoteActivation);
 			break;
 		}
 	}
@@ -45,7 +45,7 @@ bool UCrimAbilitySystemComponent::TryActivateAbilityByClassWithEventData(TSubcla
 	return bSuccess;
 }
 
-bool UCrimAbilitySystemComponent::CrimTryActivateAbility(FGameplayAbilitySpecHandle AbilityToActivate, const FGameplayEventData* TriggerEventData, bool bAllowRemoteActivation)
+bool UCrimAbilitySystemComponent::TryActivateAbilityWithEventData(FGameplayAbilitySpecHandle AbilityToActivate, const FGameplayEventData* TriggerEventData, bool bAllowRemoteActivation)
 {
     FGameplayTagContainer FailureTags;
     FGameplayAbilitySpec* Spec = FindAbilitySpecFromHandle(AbilityToActivate);
@@ -562,13 +562,13 @@ void UCrimAbilitySystemComponent::HandleChangeAbilityCanBeCanceled(const FGamepl
 void UCrimAbilitySystemComponent::OnGiveAbility(FGameplayAbilitySpec& AbilitySpec)
 {
 	Super::OnGiveAbility(AbilitySpec);
-	OnAbilityGivenDelegate.Broadcast(this, AbilitySpec);
+	OnAbilityGivenDelegate.Broadcast(AbilitySpec);
 }
 
 void UCrimAbilitySystemComponent::OnRemoveAbility(FGameplayAbilitySpec& AbilitySpec)
 {
 	Super::OnRemoveAbility(AbilitySpec);
-	OnAbilityRemovedDelegate.Broadcast(this, AbilitySpec);
+	OnAbilityRemovedDelegate.Broadcast(AbilitySpec);
 }
 
 void UCrimAbilitySystemComponent::ClientNotifyAbilityFailed_Implementation(const UGameplayAbility* Ability, const FGameplayTagContainer& FailureReason)

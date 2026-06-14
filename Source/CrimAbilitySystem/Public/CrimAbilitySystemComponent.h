@@ -11,7 +11,7 @@
 class UAbilityTagRelationshipMapping;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FCrimAbilitySystemGenericTagSignature, const FGameplayTag& /*EventTag*/);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FCrimAbilitySystemAbilitySpecSignature, UCrimAbilitySystemComponent* /*this ASC*/, const FGameplayAbilitySpec& /* The Ability Spec */);
+DECLARE_MULTICAST_DELEGATE_OneParam(FCrimAbilitySystemAbilitySpecSignature, const FGameplayAbilitySpec& /* The Ability Spec */);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class CRIMABILITYSYSTEM_API UCrimAbilitySystemComponent : public UAbilitySystemComponent
@@ -31,7 +31,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Abilities")
 	bool TryActivateAbilityByClassWithEventData(TSubclassOf<UGameplayAbility> InAbilityToActivate, const FGameplayEventData& EventData, bool bAllowRemoteActivation = true);
 
-	bool CrimTryActivateAbility(FGameplayAbilitySpecHandle AbilityToActivate, const FGameplayEventData* TriggerEventData, bool bAllowRemoteActivation = true);
+	bool TryActivateAbilityWithEventData(FGameplayAbilitySpecHandle AbilityToActivate, const FGameplayEventData* TriggerEventData, bool bAllowRemoteActivation = true);
 
 	virtual void InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor) override;
 
