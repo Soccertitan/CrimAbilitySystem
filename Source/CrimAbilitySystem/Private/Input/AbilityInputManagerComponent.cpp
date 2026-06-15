@@ -522,7 +522,7 @@ void UAbilityInputManagerComponent::SetActiveAbilityInputSet(const int32 InputSe
 	if (ActiveInputSet != InputSet && InputSet > 0 && IsLocalClient())
 	{
 		ActiveInputSet = InputSet;
-		OnActiveAbilityInputSetChangedDelegate.Broadcast(ActiveInputSet);
+		OnInputSetChangedDelegate.Broadcast(ActiveInputSet);
 		
 		for (FAbilityInputContainer& AbilityInputSet : AbilityInputSets)
 		{

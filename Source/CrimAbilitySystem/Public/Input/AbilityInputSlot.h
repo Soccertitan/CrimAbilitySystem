@@ -37,11 +37,11 @@ struct CRIMABILITYSYSTEM_API FAbilityInputSlot
 	
 private:
 	// The InputTag takes priority over the SlotIndex if it's valid.
-	UPROPERTY(EditAnywhere, meta = (Categories = "Input"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (Categories = "Input", AllowPrivateAccess = "true"))
 	FGameplayTag InputTag;
 	
-	// If not using an InputTag to define the slot, an int can be used.
-	UPROPERTY(EditAnywhere, meta = (ClampMin = -1, EditCondition=bCanChangeSlotIndex))
+	// If not using an InputTag to define the slot, must be greater than or equal to 0.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = -1, EditCondition="bCanChangeSlotIndex", AllowPrivateAccess = "true"))
 	int32 SlotIndex = -1;
 	
 	bool bCanChangeSlotIndex = true;

@@ -14,8 +14,8 @@ class UAbilityInputSet;
 struct FGameplayAbilitySpec;
 class UCrimAbilitySystemComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAbilityInputManagerAbilityInputInstanceSignature, const FAbilityInputInstance&, AbilityInputInstance, const int32, AbilityInputSet);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInputManagerAbilityInputSetSignature, int32, AbilitySet);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAbilityInputManagerAbilityInputInstanceSignature, const FAbilityInputInstance&, AbilityInputInstance, const int32, InputSet);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInputManagerInputSetSignature, const int32, InputSet);
 
 /**
  * Manages inputs for abilities and activate abilities for inputs.
@@ -46,9 +46,9 @@ public:
 	UPROPERTY(BlueprintAssignable, DisplayName = "OnAbilityInputRemoved")
 	FAbilityInputManagerAbilityInputInstanceSignature OnAbilityInputRemovedDelegate;
 	
-	/** [Local Client Only] */
+	/** [Local Client Only] Called when the active input set changes. */
 	UPROPERTY(BlueprintAssignable, DisplayName = "OnActiveAbilityInputSetChanged")
-	FAbilityInputManagerAbilityInputSetSignature OnActiveAbilityInputSetChangedDelegate;
+	FAbilityInputManagerInputSetSignature OnInputSetChangedDelegate;
 
 	/**
 	 * Adds the ability to a queue to be activated via ProcessAbilityInput
