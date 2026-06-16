@@ -60,6 +60,7 @@ public:
 	/**
 	 * Adds all abilities to a queue to be activated via ProcessAbilityInput
 	 * @param InputSlot The slot to find in the container.
+	 * @param InputSet The set to use. A value of 0 is equal to using the active set.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
 	void InputSlotPressed(const FAbilityInputSlot& InputSlot, const int32 InputSet = 0);
@@ -74,6 +75,7 @@ public:
 	/**
 	 * Adds all abilities to a queue to run AbilitySpecInputReleased against.
 	 * @param InputSlot The slot to find in the container.
+	 * @param InputSet The set to use. A value of 0 is equal to using the active set.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
 	void InputSlotReleased(const FAbilityInputSlot& InputSlot, const int32 InputSet = 0);

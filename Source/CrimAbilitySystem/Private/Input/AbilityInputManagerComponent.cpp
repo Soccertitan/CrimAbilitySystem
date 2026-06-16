@@ -7,6 +7,7 @@
 #include "CrimAbilitySystemComponent.h"
 #include "GameplayAbilitySpec.h"
 #include "Input/AbilityInput.h"
+#include "Input/AbilityInputGameplayEventData.h"
 #include "Input/AbilityInputSet.h"
 #include "Net/UnrealNetwork.h"
 
@@ -717,10 +718,10 @@ void UAbilityInputManagerComponent::InternalInputPressed(const FGameplayAbilityS
 {
 	FAbilityInputHandle InputHandle;
 	InputHandle.Handle = Handle;
-	if (AbilityInput->bSendGameplayEventData)
+	if (AbilityInput->EventData)
 	{
 		InputHandle.bSendGameplayEventData = true;
-		InputHandle.EventData = AbilityInput->MakeGameplayEventData(AbilitySystemComponent);
+		InputHandle.EventData = AbilityInput->EventData->MakeGameplayEventData(AbilitySystemComponent);
 	}
 	
 	InputPressedHandles.AddUnique(Handle);

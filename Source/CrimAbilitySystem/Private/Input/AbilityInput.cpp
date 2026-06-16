@@ -22,8 +22,3 @@ EDataValidationResult UAbilityInput::IsDataValid(class FDataValidationContext& C
 	}
 	return Result;
 }
-
-FGameplayEventData UAbilityInput::MakeGameplayEventData_Implementation(UCrimAbilitySystemComponent* AbilitySystemComponent) const
-{
-	return FGameplayEventData();
-}
