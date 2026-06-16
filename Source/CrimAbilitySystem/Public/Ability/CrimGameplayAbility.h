@@ -81,7 +81,7 @@ public:
 	
 	// Returns the actual cooldown for the ability.
 	UFUNCTION(BlueprintPure, Category = "Crim Ability System|Ability")
-	float GetBaseCooldown() const;
+	virtual float GetCooldownTime() const;
 
 	void OnAbilityFailedToActivate(const FGameplayTagContainer& FailedReason) const
 	{
@@ -105,7 +105,6 @@ public:
 	//~End of UGameplayAbility interface
 
 protected:
-
 	// Called when the ability fails to activate
 	virtual void NativeOnAbilityFailedToActivate(const FGameplayTagContainer& FailedReason) const;
 
@@ -133,7 +132,6 @@ protected:
 	void K2_OnAvatarSet();
 
 protected:
-
 	// Defines how this ability is meant to activate.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Activation")
 	EAbilityActivationPolicy ActivationPolicy;

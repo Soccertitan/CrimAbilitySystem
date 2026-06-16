@@ -159,7 +159,7 @@ bool UCrimGameplayAbility::ChangeActivationGroup(EAbilityActivationGroup NewGrou
 	return true;
 }
 
-float UCrimGameplayAbility::GetBaseCooldown() const
+float UCrimGameplayAbility::GetCooldownTime() const
 {
 	return BaseCooldown.GetValueAtLevel(GetAbilityLevel());
 }
@@ -353,7 +353,7 @@ void UCrimGameplayAbility::ApplyCooldown(const FGameplayAbilitySpecHandle Handle
 	{
 		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(CooldownGE->GetClass(), GetAbilityLevel());
 		SpecHandle.Data.Get()->DynamicGrantedTags.AppendTags(*GetCooldownTags());
-		SpecHandle.Data.Get()->SetSetByCallerMagnitude(CrimAbility::NativeGameplayTag::SetByCaller_Cooldown, GetBaseCooldown());
+		SpecHandle.Data.Get()->SetSetByCallerMagnitude(CrimAbility::NativeGameplayTag::SetByCaller_Cooldown, GetCooldownTime());
 		ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, SpecHandle);
 	}
 }

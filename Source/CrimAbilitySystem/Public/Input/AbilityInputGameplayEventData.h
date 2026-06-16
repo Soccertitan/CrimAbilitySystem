@@ -13,7 +13,7 @@ struct FGameplayEventData;
 /**
  * Used in an AbilityInput to generate GameplayEventData to be used when activating abilities as input.
  */
-UCLASS(DefaultToInstanced, Const, Blueprintable, Abstract)
+UCLASS(Abstract, DefaultToInstanced, EditInlineNew, Const, Blueprintable)
 class CRIMABILITYSYSTEM_API UAbilityInputGameplayEventData : public UObject
 {
 	GENERATED_BODY()

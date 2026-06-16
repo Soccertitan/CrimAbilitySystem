@@ -14,5 +14,5 @@ float UCrimMMC_AbilityCooldown::CalculateBaseMagnitude_Implementation(const FGam
 		return 0.0f;
 	}
 
-	return Ability->GetBaseCooldown();
+	return Ability->GetCooldownTime();
 }
