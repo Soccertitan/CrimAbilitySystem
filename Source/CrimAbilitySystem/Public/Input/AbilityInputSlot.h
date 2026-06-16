@@ -25,7 +25,7 @@ struct CRIMABILITYSYSTEM_API FAbilityInputSlot
 	
 	FORCEINLINE bool operator == (FAbilityInputSlot const& Other) const
 	{
-		return InputTag == Other.InputTag || SlotIndex == Other.SlotIndex;
+		return InputTag == Other.InputTag && SlotIndex == Other.SlotIndex;
 	}
 
 	FORCEINLINE bool operator != (FAbilityInputSlot const& Other) const

@@ -98,11 +98,11 @@ public:
 	 * @param InputSet The set to place the ability.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void SetAbilityInput(UPARAM(ref) const FAbilityInputSlot& InputSlot, UAbilityInput* AbilityInput, const int32 InputSet);
+	void SetAbilityInput(UPARAM(ref) const FAbilityInputSlot& InputSlot, UAbilityInput* AbilityInput, const int32 InputSet = 1);
 	
 	/** A local player can call this to update their local AbilityInputInstance. */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void SetAbilityInputInstances(const TArray<FAbilityInputInstance>& AbilityInputInstances, const int32 InputSet);
+	void SetAbilityInputInstances(const TArray<FAbilityInputInstance>& AbilityInputInstances, const int32 InputSet = 1);
 
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
 	void ApplyStartupAbilityInputSets();
@@ -113,7 +113,7 @@ public:
 	 * @param InputSet The set to remove the ability from.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void RemoveAbilityInput(UPARAM(ref) const FAbilityInputSlot& InputSlot, const int32 InputSet);
+	void RemoveAbilityInput(UPARAM(ref) const FAbilityInputSlot& InputSlot, const int32 InputSet = 1);
 
 	/** Removes all instances with the matching AbilityInput from the local AbilityInputSets. */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
