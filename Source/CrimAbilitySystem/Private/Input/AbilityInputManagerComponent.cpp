@@ -721,7 +721,7 @@ void UAbilityInputManagerComponent::InternalInputPressed(const FGameplayAbilityS
 	if (AbilityInput->EventData)
 	{
 		InputHandle.bSendGameplayEventData = true;
-		InputHandle.EventData = AbilityInput->EventData->MakeGameplayEventData(AbilitySystemComponent);
+		InputHandle.EventData = AbilityInput->EventData->MakeGameplayEventData(AbilitySystemComponent, AbilityInput);
 	}
 	
 	InputPressedHandles.AddUnique(Handle);
