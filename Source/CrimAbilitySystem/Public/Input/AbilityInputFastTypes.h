@@ -31,15 +31,19 @@ struct CRIMABILITYSYSTEM_API FAbilityInputInstance : public FFastArraySerializer
 
 	// The ability to activate.
 	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<UAbilityInput> AbilityInput;
-	
-	// Cached handle of the ability to activate.
-	UPROPERTY()
-	FGameplayAbilitySpecHandle AbilitySpecHandle;
+	TObjectPtr<UAbilityInput> Ability;
 	
 	void PostReplicatedAdd(const FAbilityInputContainer& InArraySerializer);
 	void PostReplicatedChange(const FAbilityInputContainer& InArraySerializer);
 	void PreReplicatedRemove(const FAbilityInputContainer& InArraySerializer);
+	
+private:
+	// Cached handle of the ability to activate.
+	UPROPERTY()
+	FGameplayAbilitySpecHandle AbilitySpecHandle;
+	
+	friend FAbilityInputContainer;
+	friend UAbilityInputManagerComponent;
 };
 
 /**
@@ -62,8 +66,8 @@ struct CRIMABILITYSYSTEM_API FAbilityInputContainer : public FFastArraySerialize
 	 */
 	void RemoveAbilityInputInstance(const FAbilityInputSlot& InputSlot);
 	
-	/** Removes all instances with matching AbilityInput. */
-	void RemoveAbilityInputInstance(UAbilityInput* AbilityInput);
+	/** Removes all instances with matching AbilityInput. Returns the slots that were removed. */
+	TArray<FAbilityInputSlot> RemoveAbilityInputInstance(UAbilityInput* AbilityInput);
 
 	/** Gets a const reference of all AbilityInputs in the container. */
 	const TArray<FAbilityInputInstance>& GetItems() const;

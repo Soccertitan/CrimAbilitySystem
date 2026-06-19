@@ -38,7 +38,7 @@ void FAbilityInputContainer::AddAbilityInputInstance(const FAbilityInputInstance
 		{
 			if (Item.InputSlot == Instance.InputSlot)
 			{
-				Item.AbilityInput = Instance.AbilityInput;
+				Item.Ability = Instance.Ability;
 				Item.AbilitySpecHandle = Instance.AbilitySpecHandle;
 				Owner->OnAbilityInputChanged(Item, InputSet);
 				MarkItemDirty(Item);
@@ -70,21 +70,24 @@ void FAbilityInputContainer::RemoveAbilityInputInstance(const FAbilityInputSlot&
 	}
 }
 
-void FAbilityInputContainer::RemoveAbilityInputInstance(UAbilityInput* AbilityInput)
+TArray<FAbilityInputSlot> FAbilityInputContainer::RemoveAbilityInputInstance(UAbilityInput* AbilityInput)
 {
+	TArray<FAbilityInputSlot> Result;
 	if (Owner)
 	{
 		for (int32 Idx = Items.Num() - 1; Idx >= 0; Idx--)
 		{
-			if (Items[Idx].AbilityInput == AbilityInput)
+			if (Items[Idx].Ability == AbilityInput)
 			{
 				FAbilityInputInstance OldItem = Items[Idx];
 				Items.RemoveAt(Idx);
 				Owner->OnAbilityInputRemoved(OldItem, InputSet);
+				Result.Add(OldItem.InputSlot);
 				MarkArrayDirty();
 			}
 		}
 	}
+	return Result;
 }
 
 const TArray<FAbilityInputInstance>& FAbilityInputContainer::GetItems() const

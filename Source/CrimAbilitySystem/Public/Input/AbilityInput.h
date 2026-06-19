@@ -25,11 +25,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability")
 	TSoftClassPtr<UGameplayAbility> GameplayAbility;
 	
-	/** If true, the AbilityInputManager will retrieve GameplayEventData to pass along to the ability. */
+	/** If valid, the AbilityInputManager will retrieve GameplayEventData to pass along to the ability activation. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability")
 	TObjectPtr<UAbilityInputGameplayEventData> EventData;
 	
-	/** A generic object for custom data. Typically, holds a DataAsset to describe this ability. */
+	/** A generic object for custom data. Typically, holds a DataAsset to describe the AbilityInput. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability")
 	TObjectPtr<UObject> CustomData;
 	

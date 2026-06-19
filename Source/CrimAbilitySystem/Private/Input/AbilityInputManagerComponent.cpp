@@ -26,7 +26,8 @@ void UAbilityInputManagerComponent::GetLifetimeReplicatedProps(TArray<class FLif
 	Params.bIsPushBased = true;
 
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ActiveAbilityInputSet, Params);
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bActiveInputSetOverride, Params);
+	Params.Condition = COND_OwnerOnly;
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, OverrideInputSet, Params);
 }
 
 void UAbilityInputManagerComponent::BeginPlay()
@@ -76,19 +77,13 @@ void UAbilityInputManagerComponent::OnAbilityInputAdded(const FAbilityInputInsta
 
 void UAbilityInputManagerComponent::OnAbilityInputChanged(const FAbilityInputInstance& Item, const int32 AbilityInputSet)
 {
-	if (AbilityInputSet == 0)
-	{
-		InputSlotReleased(Item.InputSlot);
-	}
+	InputSlotReleased(Item.InputSlot, AbilityInputSet);
 	OnAbilityInputChangedDelegate.Broadcast(Item, AbilityInputSet);
 }
 
 void UAbilityInputManagerComponent::OnAbilityInputRemoved(const FAbilityInputInstance& Item, const int32 AbilityInputSet)
 {
-	if (AbilityInputSet == 0)
-	{
-		InputSlotReleased(Item.InputSlot);
-	}
+	InputSlotReleased(Item.InputSlot, AbilityInputSet);
 	OnAbilityInputRemovedDelegate.Broadcast(Item, AbilityInputSet);
 }
 
@@ -104,12 +99,23 @@ void UAbilityInputManagerComponent::OnAbilityRemoved(const FGameplayAbilitySpec&
 
 void UAbilityInputManagerComponent::RestoreActiveAbilityInputSet()
 {
-	for (FAbilityInputContainer& InputSet : AbilityInputSets)
+	if (IsLocalClient())
 	{
-		if (InputSet.GetInputSet() == ActiveInputSet)
+		for (FAbilityInputContainer& InputSet : AbilityInputSets)
 		{
-			SetAbilityInputInstances(InputSet.Items, 0);
+			if (InputSet.GetInputSet() == ActiveInputSet)
+			{
+				ServerSetActiveAbilityInputs(InputSet.Items, true);
+			}
 		}
+	}
+}
+
+void UAbilityInputManagerComponent::OnRep_OverrideInputSet()
+{
+	if (!OverrideInputSet)
+	{
+		RestoreActiveAbilityInputSet();
 	}
 }
 
@@ -134,7 +140,7 @@ void UAbilityInputManagerComponent::InputSlotPressed(const FAbilityInputSlot& In
 			FAbilityInputInstance* Instance = ActiveAbilityInputSet.FindInputAbilityInstance(InputSlot);
 			if (Instance && Instance->AbilitySpecHandle.IsValid())
 			{
-				InternalInputPressed(Instance->AbilitySpecHandle, Instance->AbilityInput);
+				InternalInputPressed(Instance->AbilitySpecHandle, Instance->Ability);
 			}
 		}
 		else
@@ -146,7 +152,7 @@ void UAbilityInputManagerComponent::InputSlotPressed(const FAbilityInputSlot& In
 					FAbilityInputInstance* Instance = AbilityInputSet.FindInputAbilityInstance(InputSlot);
 					if (Instance && Instance->AbilitySpecHandle.IsValid())
 					{
-						InternalInputPressed(Instance->AbilitySpecHandle, Instance->AbilityInput);
+						InternalInputPressed(Instance->AbilitySpecHandle, Instance->Ability);
 					}
 				}
 			}
@@ -298,121 +304,69 @@ void UAbilityInputManagerComponent::ProcessAbilityInput()
 	InputReleasedHandles.Reset();
 }
 
-void UAbilityInputManagerComponent::SetAbilityInput(const FAbilityInputSlot& InputSlot, UAbilityInput* AbilityInput, const int32 InputSet)
+void UAbilityInputManagerComponent::SetAbilityInput(const FAbilityInputParams& Params, const int32 InputSet)
 {
-	if (InputSlot.IsValid() && AbilityInput && InputSet >= 0)
-	{
-		if (InputSet == 0)
-		{
-			if (!HasAuthority())
-			{
-				ServerSetAbilityInput(InputSlot, AbilityInput, InputSet);
-				return;
-			}
-		
-			if (bActiveInputSetOverride == false)
-			{
-				InternalAddAbilityInputInstance(InputSlot, AbilityInput, ActiveAbilityInputSet);
-			}
-			return;
-		}
-		
-		if (IsLocalClient())
-		{
-			bool bFoundExistingAbilityInputSet = false;
-			for (FAbilityInputContainer& AbilityInputSet : AbilityInputSets)
-			{
-				if (AbilityInputSet.GetInputSet() == InputSet)
-				{
-					InternalAddAbilityInputInstance(InputSlot, AbilityInput, AbilityInputSet);
-					bFoundExistingAbilityInputSet = true;
-					break;
-				}
-			}
-			
-			if (bFoundExistingAbilityInputSet == false)
-			{
-				FAbilityInputContainer& NewSet = AbilityInputSets.AddDefaulted_GetRef();
-				NewSet.RegisterWithOwner(this);
-				NewSet.InputSet = InputSet;
-				InternalAddAbilityInputInstance(InputSlot, AbilityInput, NewSet);
-				
-				AbilityInputSets.Sort([](const FAbilityInputContainer& A, const FAbilityInputContainer& B)
-				{
-					// Sorting from small to high.
-					return A.GetInputSet() < B.GetInputSet();
-				});
-			}
-			
-			if (ActiveInputSet == InputSet && bActiveInputSetOverride == false)
-			{
-				SetAbilityInput(InputSlot, AbilityInput, 0);
-			}
-		}
-	}
+	SetAbilityInputs({Params}, InputSet);
 }
 
-void UAbilityInputManagerComponent::SetAbilityInputInstances(const TArray<FAbilityInputInstance>& AbilityInputInstances, const int32 InputSet)
+void UAbilityInputManagerComponent::SetAbilityInputs(const TArray<FAbilityInputParams>& Params, const int32 InputSet, const bool bReset)
 {
-	if (InputSet >= 0)
+	if (InputSet >= 1 && IsLocalClient())
 	{
-		if (InputSet == 0)
+		/** Generate the array of input instances. */
+		TArray<FAbilityInputInstance> AbilityInputInstances;
+		AbilityInputInstances.SetNum(Params.Num());
+		for (const FAbilityInputParams& Param : Params)
 		{
-			if (!HasAuthority())
+			if (Param.Slot.IsValid())
 			{
-				ServerSetAbilityInputInstances(AbilityInputInstances, InputSet);
-				return;
+				FAbilityInputInstance Instance;
+				Instance.InputSlot = Param.Slot;
+				Instance.Ability = Param.Ability;
+				Instance.AbilitySpecHandle = FindAbilitySpecHandle(Param.Ability);
+				AbilityInputInstances.Add(Instance);
 			}
-		
-			if (bActiveInputSetOverride == false)
-			{
-				ActiveAbilityInputSet.Reset();
-				for (const FAbilityInputInstance& Instance : AbilityInputInstances)
-				{
-					ActiveAbilityInputSet.AddAbilityInputInstance(Instance);
-				}
-			}
-			return;
 		}
 		
-		if (IsLocalClient())
+		bool bFoundExistingAbilityInputSet = false;
+		for (FAbilityInputContainer& AbilityInputSet : AbilityInputSets)
 		{
-			bool bFoundExistingAbilityInputSet = false;
-			for (FAbilityInputContainer& AbilityInputSet : AbilityInputSets)
+			if (AbilityInputSet.GetInputSet() == InputSet)
 			{
-				if (AbilityInputSet.GetInputSet() == InputSet)
+				if (bReset)
 				{
 					AbilityInputSet.Reset();
-					for (const FAbilityInputInstance& Instance : AbilityInputInstances)
-					{
-						AbilityInputSet.AddAbilityInputInstance(Instance);
-					}
-					bFoundExistingAbilityInputSet = true;
-					break;
-				}
-			}
-			
-			if (bFoundExistingAbilityInputSet == false)
-			{
-				FAbilityInputContainer& NewSet = AbilityInputSets.AddDefaulted_GetRef();
-				NewSet.InputSet = InputSet;
-				NewSet.RegisterWithOwner(this);
-				for (const FAbilityInputInstance& Instance : AbilityInputInstances)
-				{
-					NewSet.AddAbilityInputInstance(Instance);
 				}
 				
-				AbilityInputSets.Sort([](const FAbilityInputContainer& A, const FAbilityInputContainer& B)
+				for (const FAbilityInputInstance& Instance : AbilityInputInstances)
 				{
-					// Sorting from small to high.
-					return A.GetInputSet() < B.GetInputSet();
-				});
+					AbilityInputSet.AddAbilityInputInstance(Instance);
+				}
+				bFoundExistingAbilityInputSet = true;
+				break;
+			}
+		}
+		
+		if (!bFoundExistingAbilityInputSet)
+		{
+			FAbilityInputContainer& NewSet = AbilityInputSets.AddDefaulted_GetRef();
+			NewSet.InputSet = InputSet;
+			NewSet.RegisterWithOwner(this);
+			for (const FAbilityInputInstance& Instance : AbilityInputInstances)
+			{
+				NewSet.AddAbilityInputInstance(Instance);
 			}
 			
-			if (ActiveInputSet == InputSet && bActiveInputSetOverride == false)
+			AbilityInputSets.Sort([](const FAbilityInputContainer& A, const FAbilityInputContainer& B)
 			{
-				SetAbilityInputInstances(AbilityInputInstances, 0);
-			}
+				// Sorting from small to high.
+				return A.GetInputSet() < B.GetInputSet();
+			});
+		}
+		
+		if (ActiveInputSet == InputSet && !OverrideInputSet)
+		{
+			ServerSetActiveAbilityInputs(AbilityInputInstances, bReset);
 		}
 	}
 }
@@ -425,54 +379,45 @@ void UAbilityInputManagerComponent::ApplyStartupAbilityInputSets()
 		{
 			AbilityInputSet.Reset();
 		}
+		AbilityInputSets.Reset(StartupAbilityInputSets.Num());
 		
 		for (int32 Index = 0; Index < StartupAbilityInputSets.Num(); Index++)
 		{
 			if (UAbilityInputSet* AbilityInputSet = StartupAbilityInputSets[Index])
 			{
-				for (const FAbilityInputItem& Item : AbilityInputSet->Items)
-				{
-					SetAbilityInput(Item.Slot, Item.AbilityInput, Index + 1);
-				}
+				SetAbilityInputs(AbilityInputSet->Items, Index + 1, true);
 			}
 		}
 	}
 }
 
-void UAbilityInputManagerComponent::RemoveAbilityInput(const FAbilityInputSlot& InputSlot, const int32 InputSet)
+void UAbilityInputManagerComponent::ClearAbilityInput(const FAbilityInputSlot& InputSlot, const int32 InputSet)
 {
-	if (InputSlot.IsValid() && InputSet >= 0)
+	ClearAbilityInputs({InputSlot}, InputSet);
+}
+
+void UAbilityInputManagerComponent::ClearAbilityInputs(const TArray<FAbilityInputSlot>& InputSlots, const int32 InputSet)
+{
+	if (InputSet >= 1 && IsLocalClient())
 	{
-		if (InputSet == 0)
+		for (FAbilityInputContainer& AbilityInputSet : AbilityInputSets)
 		{
-			if (!HasAuthority())
+			if (AbilityInputSet.GetInputSet() == InputSet)
 			{
-				ServerRemoveAbilityInput(InputSlot, InputSet);
-				return;
+				for (const FAbilityInputSlot& InputSlot : InputSlots)
+				{
+					if (InputSlot.IsValid())
+					{
+						AbilityInputSet.RemoveAbilityInputInstance(InputSlot);
+					}
+				}
+				break;
 			}
-		
-			if (bActiveInputSetOverride == false)
-			{
-				ActiveAbilityInputSet.RemoveAbilityInputInstance(InputSlot);
-			}
-			return;
 		}
 		
-		if (IsLocalClient())
+		if (ActiveInputSet == InputSet && !OverrideInputSet)
 		{
-			for (FAbilityInputContainer& AbilityInputSet : AbilityInputSets)
-			{
-				if (AbilityInputSet.GetInputSet() == InputSet)
-				{
-					AbilityInputSet.RemoveAbilityInputInstance(InputSlot);
-					break;
-				}
-			}
-			
-			if (ActiveInputSet == InputSet && bActiveInputSetOverride == false)
-			{
-				RemoveAbilityInput(InputSlot, 0);
-			}
+			ServerClearActiveAbilityInputs(InputSlots);
 		}
 	}
 }
@@ -483,38 +428,42 @@ void UAbilityInputManagerComponent::RemoveAllAbilityInputInstanceWithMatchingAbi
 	{
 		for (FAbilityInputContainer& AbilityInputSet : AbilityInputSets)
 		{
-			AbilityInputSet.RemoveAbilityInputInstance(AbilityInput);
+			TArray<FAbilityInputSlot> InputSlots = AbilityInputSet.RemoveAbilityInputInstance(AbilityInput);
+			if (ActiveInputSet == AbilityInputSet.GetInputSet() && !OverrideInputSet)
+			{
+				ServerClearActiveAbilityInputs(InputSlots);
+			}
 		}
 	}
 }
 
-void UAbilityInputManagerComponent::SetOverrideActiveInputSet(bool bEnable, UAbilityInputSet* InputSet)
+void UAbilityInputManagerComponent::OverrideActiveInputSet(UAbilityInputSet* InputSet)
 {
-	if (!HasAuthority())
+	if (!HasAuthority() && OverrideInputSet != InputSet)
 	{
 		return;
 	}
 	
-	bActiveInputSetOverride = bEnable;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bActiveInputSetOverride, this);
 	ActiveAbilityInputSet.Reset();
+	OverrideInputSet = InputSet;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, OverrideInputSet, this);
 	
-	if (bActiveInputSetOverride)
+	if (OverrideInputSet)
 	{
-		if (InputSet)
+		for (const FAbilityInputParams& Item : InputSet->Items)
 		{
-			for (const FAbilityInputItem& Item : InputSet->Items)
-			{
-				if (Item.AbilityInput)
-				{
-					InternalAddAbilityInputInstance(Item.Slot, Item.AbilityInput, ActiveAbilityInputSet);
-				}
-			}
+			FAbilityInputInstance InputInstance;
+			InputInstance.InputSlot = Item.Slot;
+			InputInstance.Ability = Item.Ability;
+			InputInstance.AbilitySpecHandle = FindAbilitySpecHandle(Item.Ability);
+			ActiveAbilityInputSet.AddAbilityInputInstance(InputInstance);
 		}
+		return;
 	}
-	else
+
+	if (IsLocalClient())
 	{
-		ClientRestoreActiveAbilityInputSet();
+		RestoreActiveAbilityInputSet();
 	}
 }
 
@@ -529,9 +478,9 @@ void UAbilityInputManagerComponent::SetActiveAbilityInputSet(const int32 InputSe
 		{
 			if (AbilityInputSet.GetInputSet() == InputSet)
 			{
-				if (bActiveInputSetOverride == false)
+				if (!OverrideInputSet)
 				{
-					SetAbilityInputInstances(AbilityInputSet.GetItems(), 0);
+					ServerSetActiveAbilityInputs(AbilityInputSet.GetItems(), true);
 				}
 				break;
 			}
@@ -590,12 +539,16 @@ void UAbilityInputManagerComponent::ResetAbilityInputSet(int32 InputSet)
 			if (AbilityInputSet.GetInputSet() == InputSet)
 			{
 				AbilityInputSet.Reset();
+				if (ActiveInputSet == InputSet && !OverrideInputSet)
+				{
+					ServerSetActiveAbilityInputs(TArray<FAbilityInputInstance>(), true);
+				}
 			}
 		}
 	}
 }
 
-TArray<FAbilityInputInstance> UAbilityInputManagerComponent::GetAbilityInputItems(const int32 AbilitySet) const
+TArray<FAbilityInputInstance> UAbilityInputManagerComponent::GetAbilityInputInstances(const int32 AbilitySet) const
 {
 	if (AbilitySet == 0)
 	{
@@ -740,7 +693,7 @@ void UAbilityInputManagerComponent::UpdateAbilitySpecHandleOnAbilityInputInstanc
 	{
 		for (FAbilityInputInstance& Instance : ActiveAbilityInputSet.Items)
 		{
-			if (Instance.AbilityInput->GameplayAbility.Get() == Ability->GetClass())
+			if (Instance.Ability && Instance.Ability->GameplayAbility.Get() == Ability->GetClass())
 			{
 				Instance.AbilitySpecHandle = Handle;
 				ActiveAbilityInputSet.MarkItemDirty(Instance);
@@ -748,14 +701,17 @@ void UAbilityInputManagerComponent::UpdateAbilitySpecHandleOnAbilityInputInstanc
 		}
 	}
 	
-	for (FAbilityInputContainer& Set : AbilityInputSets)
+	if (IsLocalClient())
 	{
-		for (FAbilityInputInstance& Instance : Set.Items)
+		for (FAbilityInputContainer& Set : AbilityInputSets)
 		{
-			if (Instance.AbilityInput->GameplayAbility.Get() == Ability->GetClass())
+			for (FAbilityInputInstance& Instance : Set.Items)
 			{
-				Instance.AbilitySpecHandle = Handle;
-				ActiveAbilityInputSet.MarkItemDirty(Instance);
+				if (Instance.Ability->GameplayAbility.Get() == Ability->GetClass())
+				{
+					Instance.AbilitySpecHandle = Handle;
+					ActiveAbilityInputSet.MarkItemDirty(Instance);
+				}
 			}
 		}
 	}
@@ -777,49 +733,44 @@ void UAbilityInputManagerComponent::ClearAllAbilitySpecHandles()
 		for (FAbilityInputInstance& Instance : Set.Items)
 		{
 			Instance.AbilitySpecHandle = FGameplayAbilitySpecHandle();
-			ActiveAbilityInputSet.MarkItemDirty(Instance);
+			Set.MarkItemDirty(Instance);
 		}
 	}
 }
 
-void UAbilityInputManagerComponent::InternalAddAbilityInputInstance(const FAbilityInputSlot& InputSlot, UAbilityInput* AbilityInput, FAbilityInputContainer& InputSet)
+void UAbilityInputManagerComponent::InternalSetActiveAbilityInputs(const TArray<FAbilityInputInstance>& Instances, const bool bReset)
 {
-	FAbilityInputInstance NewInstance;
-	NewInstance.InputSlot = InputSlot;
-	NewInstance.AbilityInput = AbilityInput;
-	
-	if (AbilitySystemComponent)
+	if (!OverrideInputSet)
 	{
-		FScopedAbilityListLock ActiveScopeLock(*AbilitySystemComponent);
-		for (const FGameplayAbilitySpec& AbilitySpec : AbilitySystemComponent->GetActivatableAbilities())
+		if (bReset)
 		{
-			if (AbilityInput->GameplayAbility.Get() == AbilitySpec.Ability->GetClass())
-			{
-				NewInstance.AbilitySpecHandle = AbilitySpec.Handle;
-				break;
-			}
+			ActiveAbilityInputSet.Reset();
+		}
+	
+		for (const FAbilityInputInstance& Instance : Instances)
+		{
+			ActiveAbilityInputSet.AddAbilityInputInstance(Instance);
 		}
 	}
-	
-	InputSet.AddAbilityInputInstance(NewInstance);
 }
 
-void UAbilityInputManagerComponent::ServerSetAbilityInputInstances_Implementation(const TArray<FAbilityInputInstance>& AbilityInputInstances, const int32 InputSet)
+void UAbilityInputManagerComponent::InternalClearActiveAbilityInputs(const TArray<FAbilityInputSlot>& InputSlots)
 {
-	SetAbilityInputInstances(AbilityInputInstances, InputSet);
+	if (!OverrideInputSet)
+	{
+		for (const FAbilityInputSlot& InputSlot : InputSlots)
+		{
+			ActiveAbilityInputSet.RemoveAbilityInputInstance(InputSlot);
+		}
+	}
 }
 
-void UAbilityInputManagerComponent::ServerSetAbilityInput_Implementation(const FAbilityInputSlot& InputSlot, const UAbilityInput* AbilityInput, const int32 InputSet)
+void UAbilityInputManagerComponent::ServerSetActiveAbilityInputs_Implementation(const TArray<FAbilityInputInstance>& Instances, const bool bReset)
 {
-	SetAbilityInput(InputSlot, const_cast<UAbilityInput*>(AbilityInput), InputSet);
+	InternalSetActiveAbilityInputs(Instances, bReset);
 }
 
-void UAbilityInputManagerComponent::ServerRemoveAbilityInput_Implementation(const FAbilityInputSlot& InputSlot, const int32 InputSet)
+void UAbilityInputManagerComponent::ServerClearActiveAbilityInputs_Implementation(const TArray<FAbilityInputSlot>& InputSlots)
 {
-	RemoveAbilityInput(InputSlot, InputSet);
-}
-
-void UAbilityInputManagerComponent::ClientRestoreActiveAbilityInputSet_Implementation()
-{
-	RestoreActiveAbilityInputSet();
+	InternalClearActiveAbilityInputs(InputSlots);
 }

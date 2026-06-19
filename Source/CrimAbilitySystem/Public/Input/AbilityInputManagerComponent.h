@@ -86,24 +86,28 @@ public:
 
 	/**
 	 * Processes all inputs that were pressed and released. Activating abilities, sending InputPressed events,
-	 * and InputReleased events.
+	 * and InputReleased events. Must be manually called in a PlayerControllers Process Ability Input function or some 
+	 * other alternative.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
 	void ProcessAbilityInput();
 
 	/**
 	 * Adds an AbilityInputItem to the container, or updates an existing one. Will not update the active set if it's currently overriden.
-	 * @param InputSlot The slot to put the ability.
-	 * @param AbilityInput The ability to activate in the slot.
+	 * @param Params The ability to set.
 	 * @param InputSet The set to place the ability.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void SetAbilityInput(UPARAM(ref) const FAbilityInputSlot& InputSlot, UAbilityInput* AbilityInput, const int32 InputSet = 1);
+	void SetAbilityInput(UPARAM(ref) const FAbilityInputParams& Params, const int32 InputSet = 1);
 	
-	/** A local player can call this to update their local AbilityInputInstance. */
+	/** 
+	 * Updates the local InputSet with the passed in params. If bReset is true, the InputSet is reset before the new 
+	 * params are added. Then it calls for the server to update the active input set if applicable
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void SetAbilityInputInstances(const TArray<FAbilityInputInstance>& AbilityInputInstances, const int32 InputSet = 1);
+	void SetAbilityInputs(const TArray<FAbilityInputParams>& Params, const int32 InputSet = 1, const bool bReset = false);
 
+	/** Resets the ability input sets to the startup ability input sets. */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
 	void ApplyStartupAbilityInputSets();
 
@@ -113,18 +117,21 @@ public:
 	 * @param InputSet The set to remove the ability from.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void RemoveAbilityInput(UPARAM(ref) const FAbilityInputSlot& InputSlot, const int32 InputSet = 1);
+	void ClearAbilityInput(UPARAM(ref) const FAbilityInputSlot& InputSlot, const int32 InputSet = 1);
+	
+	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
+	void ClearAbilityInputs(UPARAM(ref) const TArray<FAbilityInputSlot>& InputSlots, const int32 InputSet = 1);
 
-	/** Removes all instances with the matching AbilityInput from the local AbilityInputSets. */
+	/** Removes all instances with the matching AbilityInput from the local AbilityInputSets. Updating the active set as required. */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
 	void RemoveAllAbilityInputInstanceWithMatchingAbility(UAbilityInput* AbilityInput);
 	
-	/** Overrides the Active set with the passed in set or disables the override. */
+	/** Overrides the Active set with the passed in set. If nullptr, disables the override. */
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Crim Ability System|Input")
-	void SetOverrideActiveInputSet(bool bEnable, UAbilityInputSet* InputSet = nullptr);
+	void OverrideActiveInputSet(UAbilityInputSet* InputSet);
 	
 	UFUNCTION(BlueprintPure, Category = "Crim Ability System|Input")
-	bool IsActiveInputSetOverriden() const { return bActiveInputSetOverride; }
+	bool IsActiveInputSetOverriden() const { return OverrideInputSet ? true : false; }
 
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
 	void SetActiveAbilityInputSet(const int32 InputSet);
@@ -142,13 +149,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Crim Ability System|Input")
 	bool IsAbilityInputSetEmpty(int32 InputSet) const;
 
-	/** Empties out the InputSet of all AbilityInputInstances. Will not update the ActiveSet directly. */
+	/** Empties out the InputSet of all AbilityInputInstances. */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
 	void ResetAbilityInputSet(int32 InputSet);
 
 	/** Returns a copy of the AbilityInputItems from the AbilitySet */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Crim Ability System|Input")
-	TArray<FAbilityInputInstance> GetAbilityInputItems(const int32 AbilitySet) const;
+	TArray<FAbilityInputInstance> GetAbilityInputInstances(const int32 AbilitySet) const;
 	
 	/**
 	 * @param InputSlot The slot to search for.
@@ -174,7 +181,7 @@ protected:
 	void OnAbilityGiven(const FGameplayAbilitySpec& AbilitySpec);
 	void OnAbilityRemoved(const FGameplayAbilitySpec& AbilitySpec);
 	
-	/** Called from server to tell the client to restore their active ability input set. */
+	/** Called in the OnRep_OverrideInputSet function when it's appropriate to send the proper ability set to the server. */
 	void RestoreActiveAbilityInputSet();
 	
 private:
@@ -190,9 +197,11 @@ private:
 	UPROPERTY()
 	int32 ActiveInputSet = 1;
 	
-	// Will be set to true by the server if the current set is overriden.
-	UPROPERTY(Replicated)
-	bool bActiveInputSetOverride = false;
+	// If valid, this InputSet overrides the active AbilityInputSet.
+	UPROPERTY(ReplicatedUsing = "OnRep_OverrideInputSet")
+	TObjectPtr<UAbilityInputSet> OverrideInputSet;
+	UFUNCTION()
+	void OnRep_OverrideInputSet();
 	
 	/** Cached value of rather this is a simulated actor */
 	UPROPERTY()
@@ -226,17 +235,13 @@ private:
 	void UpdateAbilitySpecHandleOnAbilityInputInstances(const UGameplayAbility* Ability, const FGameplayAbilitySpecHandle& Handle);
 	void ClearAllAbilitySpecHandles();
 	
-	void InternalAddAbilityInputInstance(const FAbilityInputSlot& InputSlot, UAbilityInput* AbilityInput, FAbilityInputContainer& InputSet);
+	// void InternalAddAbilityInputInstance(const FAbilityInputSlot& InputSlot, UAbilityInput* AbilityInput, FAbilityInputContainer& InputSet);
+	/** Updates the active ability input set from client. */
+	void InternalSetActiveAbilityInputs(const TArray<FAbilityInputInstance>& Instances, const bool bReset);
+	void InternalClearActiveAbilityInputs(const TArray<FAbilityInputSlot>& InputSlots);
 
 	UFUNCTION(Server, Reliable)
-	void ServerSetAbilityInput(const FAbilityInputSlot& InputSlot, const UAbilityInput* AbilityInput, const int32 InputSet);
-
+	void ServerSetActiveAbilityInputs(const TArray<FAbilityInputInstance>& Instances, const bool bReset);
 	UFUNCTION(Server, Reliable)
-	void ServerRemoveAbilityInput(const FAbilityInputSlot& InputSlot, const int32 InputSet);
-
-	UFUNCTION(Client, Reliable)
-	void ClientRestoreActiveAbilityInputSet();
-	
-	UFUNCTION(Server, Reliable)
-	void ServerSetAbilityInputInstances(const TArray<FAbilityInputInstance>& AbilityInputInstances, const int32 InputSet);
+	void ServerClearActiveAbilityInputs(const TArray<FAbilityInputSlot>& InputSlots);
 };
