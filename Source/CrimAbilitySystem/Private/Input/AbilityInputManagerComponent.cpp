@@ -315,7 +315,7 @@ void UAbilityInputManagerComponent::SetAbilityInputs(const TArray<FAbilityInputP
 	{
 		/** Generate the array of input instances. */
 		TArray<FAbilityInputInstance> AbilityInputInstances;
-		AbilityInputInstances.SetNum(Params.Num());
+		AbilityInputInstances.Reserve(Params.Num());
 		for (const FAbilityInputParams& Param : Params)
 		{
 			if (Param.Slot.IsValid())
@@ -656,12 +656,15 @@ void UAbilityInputManagerComponent::ReleaseAbilityInput()
 
 FGameplayAbilitySpecHandle UAbilityInputManagerComponent::FindAbilitySpecHandle(const UAbilityInput* AbilityInput) const
 {
-	FScopedAbilityListLock ActiveScopeLock(*AbilitySystemComponent);
-	for (const FGameplayAbilitySpec& AbilitySpec : AbilitySystemComponent->GetActivatableAbilities())
+	if (AbilitySystemComponent)
 	{
-		if (AbilityInput->GameplayAbility.Get() == AbilitySpec.Ability->GetClass())
+		FScopedAbilityListLock ActiveScopeLock(*AbilitySystemComponent);
+		for (const FGameplayAbilitySpec& AbilitySpec : AbilitySystemComponent->GetActivatableAbilities())
 		{
-			return AbilitySpec.Handle;
+			if (AbilityInput->GameplayAbility.Get() == AbilitySpec.Ability->GetClass())
+			{
+				return AbilitySpec.Handle;
+			}
 		}
 	}
 	return FGameplayAbilitySpecHandle();
