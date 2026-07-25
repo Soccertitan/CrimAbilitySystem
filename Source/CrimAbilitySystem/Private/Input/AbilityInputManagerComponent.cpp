@@ -6,8 +6,6 @@
 #include "CrimAbilityNativeGameplayTags.h"
 #include "CrimAbilitySystemComponent.h"
 #include "GameplayAbilitySpec.h"
-#include "Input/AbilityInput.h"
-#include "Input/AbilityInputGameplayEventData.h"
 #include "Input/AbilityInputSet.h"
 #include "Net/UnrealNetwork.h"
 
@@ -119,14 +117,14 @@ void UAbilityInputManagerComponent::OnRep_OverrideInputSet()
 	}
 }
 
-void UAbilityInputManagerComponent::InputPressed(const UAbilityInput* AbilityInput)
+void UAbilityInputManagerComponent::InputPressed(const TSubclassOf<UGameplayAbility> AbilityClass)
 {
 	if (AbilitySystemComponent)
 	{
-		FGameplayAbilitySpecHandle Handle = FindAbilitySpecHandle(AbilityInput);
+		FGameplayAbilitySpecHandle Handle = FindAbilitySpecHandle(AbilityClass);
 		if (Handle.IsValid())
 		{
-			InternalInputPressed(Handle, AbilityInput);
+			InputPressedInternal(Handle);
 		}
 	}
 }
@@ -140,7 +138,7 @@ void UAbilityInputManagerComponent::InputSlotPressed(const FAbilityInputSlot& In
 			FAbilityInputInstance* Instance = ActiveAbilityInputSet.FindInputAbilityInstance(InputSlot);
 			if (Instance && Instance->AbilitySpecHandle.IsValid())
 			{
-				InternalInputPressed(Instance->AbilitySpecHandle, Instance->Ability);
+				InputPressedInternal(Instance->AbilitySpecHandle);
 			}
 		}
 		else
@@ -152,7 +150,7 @@ void UAbilityInputManagerComponent::InputSlotPressed(const FAbilityInputSlot& In
 					FAbilityInputInstance* Instance = AbilityInputSet.FindInputAbilityInstance(InputSlot);
 					if (Instance && Instance->AbilitySpecHandle.IsValid())
 					{
-						InternalInputPressed(Instance->AbilitySpecHandle, Instance->Ability);
+						InputPressedInternal(Instance->AbilitySpecHandle);
 					}
 				}
 			}
@@ -160,14 +158,14 @@ void UAbilityInputManagerComponent::InputSlotPressed(const FAbilityInputSlot& In
 	}
 }
 
-void UAbilityInputManagerComponent::InputReleased(const UAbilityInput* AbilityInput)
+void UAbilityInputManagerComponent::InputReleased(const TSubclassOf<UGameplayAbility> AbilityClass)
 {
 	if (AbilitySystemComponent)
 	{
-		FGameplayAbilitySpecHandle Handle = FindAbilitySpecHandle(AbilityInput);
+		FGameplayAbilitySpecHandle Handle = FindAbilitySpecHandle(AbilityClass);
 		if (Handle.IsValid())
 		{
-			InternalInputReleased(Handle);
+			InputReleasedInternal(Handle);
 		}
 	}
 }
@@ -181,7 +179,7 @@ void UAbilityInputManagerComponent::InputSlotReleased(const FAbilityInputSlot& I
 			FAbilityInputInstance* Instance = ActiveAbilityInputSet.FindInputAbilityInstance(InputSlot);
 			if (Instance && Instance->AbilitySpecHandle.IsValid())
 			{
-				InternalInputReleased(Instance->AbilitySpecHandle);
+				InputReleasedInternal(Instance->AbilitySpecHandle);
 			}
 		}
 		else
@@ -193,7 +191,7 @@ void UAbilityInputManagerComponent::InputSlotReleased(const FAbilityInputSlot& I
 					FAbilityInputInstance* Instance = AbilityInputSet.FindInputAbilityInstance(InputSlot);
 					if (Instance && Instance->AbilitySpecHandle.IsValid())
 					{
-						InternalInputReleased(Instance->AbilitySpecHandle);
+						InputReleasedInternal(Instance->AbilitySpecHandle);
 					}
 				}
 			}
@@ -210,22 +208,22 @@ void UAbilityInputManagerComponent::ProcessAbilityInput()
 		return;
 	}
 
-	TArray<FAbilityInputHandle> AbilitiesToActivate;
+	TArray<FGameplayAbilitySpecHandle> AbilitiesToActivate;
 	AbilitiesToActivate.Reset(InputPressedHandles.Num() + InputHeldHandles.Num());
 
 	//
 	// Process all abilities that activate when the input is held.
 	//
-	for (const FAbilityInputHandle& AbilityInputHandle : InputHeldHandles)
+	for (const FGameplayAbilitySpecHandle& Handle : InputHeldHandles)
 	{
-		if (const FGameplayAbilitySpec* AbilitySpec = AbilitySystemComponent->FindAbilitySpecFromHandle(AbilityInputHandle.Handle))
+		if (const FGameplayAbilitySpec* AbilitySpec = AbilitySystemComponent->FindAbilitySpecFromHandle(Handle))
 		{
 			if (AbilitySpec->Ability && !AbilitySpec->IsActive())
 			{
 				const UCrimGameplayAbility* CrimAbilityCDO = Cast<UCrimGameplayAbility>(AbilitySpec->Ability);
 				if (CrimAbilityCDO && CrimAbilityCDO->GetActivationPolicy() == EAbilityActivationPolicy::WhileInputActive)
 				{
-					AbilitiesToActivate.Add(AbilityInputHandle);
+					AbilitiesToActivate.Add(Handle);
 				}
 			}
 		}
@@ -234,9 +232,9 @@ void UAbilityInputManagerComponent::ProcessAbilityInput()
 	//
 	// Process all abilities that had their input pressed this frame.
 	//
-	for (const FAbilityInputHandle& AbilityInputHandle : InputPressedHandles)
+	for (const FGameplayAbilitySpecHandle& Handle : InputPressedHandles)
 	{
-		if (FGameplayAbilitySpec* AbilitySpec = AbilitySystemComponent->FindAbilitySpecFromHandle(AbilityInputHandle.Handle))
+		if (FGameplayAbilitySpec* AbilitySpec = AbilitySystemComponent->FindAbilitySpecFromHandle(Handle))
 		{
 			if (AbilitySpec->Ability)
 			{
@@ -254,12 +252,12 @@ void UAbilityInputManagerComponent::ProcessAbilityInput()
 					{
 						if (CrimAbilityCDO->GetActivationPolicy() == EAbilityActivationPolicy::OnInputTriggered)
 						{
-							AbilitiesToActivate.Add(AbilityInputHandle);
+							AbilitiesToActivate.Add(Handle);
 						}
 					}
 					else
 					{
-						AbilitiesToActivate.Add(AbilityInputHandle);
+						AbilitiesToActivate.Add(Handle);
 					}
 				}
 			}
@@ -271,10 +269,9 @@ void UAbilityInputManagerComponent::ProcessAbilityInput()
 	// We do it all at once so that held inputs don't activate the ability
 	// and then also send an input event to the ability because of the press.
 	//
-	for (const FAbilityInputHandle& AbilityInputHandle : AbilitiesToActivate)
+	for (const FGameplayAbilitySpecHandle& Handle : AbilitiesToActivate)
 	{
-		const FGameplayEventData* EventData = AbilityInputHandle.bSendGameplayEventData ? &AbilityInputHandle.EventData : nullptr;
-		AbilitySystemComponent->TryActivateAbilityWithEventData(AbilityInputHandle.Handle, EventData);
+		AbilitySystemComponent->TryActivateAbility(Handle);
 	}
 
 	//
@@ -322,8 +319,8 @@ void UAbilityInputManagerComponent::SetAbilityInputs(const TArray<FAbilityInputP
 			{
 				FAbilityInputInstance Instance;
 				Instance.InputSlot = Param.Slot;
-				Instance.Ability = Param.Ability;
-				Instance.AbilitySpecHandle = FindAbilitySpecHandle(Param.Ability);
+				Instance.AbilityClass = Param.AbilityClass;
+				Instance.AbilitySpecHandle = FindAbilitySpecHandle(Param.AbilityClass);
 				AbilityInputInstances.Add(Instance);
 			}
 		}
@@ -422,13 +419,13 @@ void UAbilityInputManagerComponent::ClearAbilityInputs(const TArray<FAbilityInpu
 	}
 }
 
-void UAbilityInputManagerComponent::RemoveAllAbilityInputInstanceWithMatchingAbility(UAbilityInput* AbilityInput)
+void UAbilityInputManagerComponent::RemoveAllAbilityInputInstanceWithMatchingAbility(const TSubclassOf<UGameplayAbility> AbilityClass)
 {
 	if (IsLocalClient())
 	{
 		for (FAbilityInputContainer& AbilityInputSet : AbilityInputSets)
 		{
-			TArray<FAbilityInputSlot> InputSlots = AbilityInputSet.RemoveAbilityInputInstance(AbilityInput);
+			TArray<FAbilityInputSlot> InputSlots = AbilityInputSet.RemoveAbilityInputInstance(AbilityClass);
 			if (ActiveInputSet == AbilityInputSet.GetInputSet() && !OverrideInputSet)
 			{
 				ServerClearActiveAbilityInputs(InputSlots);
@@ -454,8 +451,8 @@ void UAbilityInputManagerComponent::OverrideActiveInputSet(UAbilityInputSet* Inp
 		{
 			FAbilityInputInstance InputInstance;
 			InputInstance.InputSlot = Item.Slot;
-			InputInstance.Ability = Item.Ability;
-			InputInstance.AbilitySpecHandle = FindAbilitySpecHandle(Item.Ability);
+			InputInstance.AbilityClass = Item.AbilityClass;
+			InputInstance.AbilitySpecHandle = FindAbilitySpecHandle(Item.AbilityClass);
 			ActiveAbilityInputSet.AddAbilityInputInstance(InputInstance);
 		}
 		return;
@@ -654,14 +651,14 @@ void UAbilityInputManagerComponent::ReleaseAbilityInput()
 	}
 }
 
-FGameplayAbilitySpecHandle UAbilityInputManagerComponent::FindAbilitySpecHandle(const UAbilityInput* AbilityInput) const
+FGameplayAbilitySpecHandle UAbilityInputManagerComponent::FindAbilitySpecHandle(const TSubclassOf<UGameplayAbility>& AbilityClass) const
 {
 	if (AbilitySystemComponent)
 	{
 		FScopedAbilityListLock ActiveScopeLock(*AbilitySystemComponent);
 		for (const FGameplayAbilitySpec& AbilitySpec : AbilitySystemComponent->GetActivatableAbilities())
 		{
-			if (AbilityInput->GameplayAbility.Get() == AbilitySpec.Ability->GetClass())
+			if (AbilityClass == AbilitySpec.Ability->GetClass())
 			{
 				return AbilitySpec.Handle;
 			}
@@ -670,21 +667,13 @@ FGameplayAbilitySpecHandle UAbilityInputManagerComponent::FindAbilitySpecHandle(
 	return FGameplayAbilitySpecHandle();
 }
 
-void UAbilityInputManagerComponent::InternalInputPressed(const FGameplayAbilitySpecHandle& Handle, const UAbilityInput* AbilityInput)
+void UAbilityInputManagerComponent::InputPressedInternal(const FGameplayAbilitySpecHandle& Handle)
 {
-	FAbilityInputHandle InputHandle;
-	InputHandle.Handle = Handle;
-	if (AbilityInput->EventData)
-	{
-		InputHandle.bSendGameplayEventData = true;
-		InputHandle.EventData = AbilityInput->EventData->MakeGameplayEventData(AbilitySystemComponent, AbilityInput);
-	}
-	
 	InputPressedHandles.AddUnique(Handle);
 	InputHeldHandles.AddUnique(Handle);
 }
 
-void UAbilityInputManagerComponent::InternalInputReleased(const FGameplayAbilitySpecHandle& Handle)
+void UAbilityInputManagerComponent::InputReleasedInternal(const FGameplayAbilitySpecHandle& Handle)
 {
 	InputReleasedHandles.AddUnique(Handle);
 	InputHeldHandles.Remove(Handle);
@@ -696,7 +685,7 @@ void UAbilityInputManagerComponent::UpdateAbilitySpecHandleOnAbilityInputInstanc
 	{
 		for (FAbilityInputInstance& Instance : ActiveAbilityInputSet.Items)
 		{
-			if (Instance.Ability && Instance.Ability->GameplayAbility.Get() == Ability->GetClass())
+			if (Instance.AbilityClass == Ability->GetClass())
 			{
 				Instance.AbilitySpecHandle = Handle;
 				ActiveAbilityInputSet.MarkItemDirty(Instance);
@@ -710,7 +699,7 @@ void UAbilityInputManagerComponent::UpdateAbilitySpecHandleOnAbilityInputInstanc
 		{
 			for (FAbilityInputInstance& Instance : Set.Items)
 			{
-				if (Instance.Ability->GameplayAbility.Get() == Ability->GetClass())
+				if (Instance.AbilityClass == Ability->GetClass())
 				{
 					Instance.AbilitySpecHandle = Handle;
 					ActiveAbilityInputSet.MarkItemDirty(Instance);
@@ -741,7 +730,7 @@ void UAbilityInputManagerComponent::ClearAllAbilitySpecHandles()
 	}
 }
 
-void UAbilityInputManagerComponent::InternalSetActiveAbilityInputs(const TArray<FAbilityInputInstance>& Instances, const bool bReset)
+void UAbilityInputManagerComponent::SetActiveAbilityInputsInternal(const TArray<FAbilityInputInstance>& Instances, const bool bReset)
 {
 	if (!OverrideInputSet)
 	{
@@ -757,7 +746,7 @@ void UAbilityInputManagerComponent::InternalSetActiveAbilityInputs(const TArray<
 	}
 }
 
-void UAbilityInputManagerComponent::InternalClearActiveAbilityInputs(const TArray<FAbilityInputSlot>& InputSlots)
+void UAbilityInputManagerComponent::ClearActiveAbilityInputsInternal(const TArray<FAbilityInputSlot>& InputSlots)
 {
 	if (!OverrideInputSet)
 	{
@@ -770,10 +759,10 @@ void UAbilityInputManagerComponent::InternalClearActiveAbilityInputs(const TArra
 
 void UAbilityInputManagerComponent::ServerSetActiveAbilityInputs_Implementation(const TArray<FAbilityInputInstance>& Instances, const bool bReset)
 {
-	InternalSetActiveAbilityInputs(Instances, bReset);
+	SetActiveAbilityInputsInternal(Instances, bReset);
 }
 
 void UAbilityInputManagerComponent::ServerClearActiveAbilityInputs_Implementation(const TArray<FAbilityInputSlot>& InputSlots)
 {
-	InternalClearActiveAbilityInputs(InputSlots);
+	ClearActiveAbilityInputsInternal(InputSlots);
 }

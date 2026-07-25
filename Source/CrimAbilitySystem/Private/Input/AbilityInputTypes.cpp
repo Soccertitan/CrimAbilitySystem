@@ -2,17 +2,18 @@
 
 
 #include "Input/AbilityInputTypes.h"
-#include "Input/AbilityInput.h"
+
+#include "Abilities/GameplayAbility.h"
 
 
 bool FAbilityInputParams::IsValid() const
 {
-	return Slot.IsValid() && Ability;
+	return Slot.IsValid() && AbilityClass;
 }
 
 #if WITH_EDITOR
 void FAbilityInputParams::PostSerialize(const FArchive& Ar)
 {
-	EditorDisplayName = FString::Printf(TEXT("%s : %s"), *Slot.GetString(), *GetNameSafe(Ability));
+	EditorDisplayName = FString::Printf(TEXT("%s : %s"), *Slot.GetString(), *GetNameSafe(AbilityClass));
 }
 #endif

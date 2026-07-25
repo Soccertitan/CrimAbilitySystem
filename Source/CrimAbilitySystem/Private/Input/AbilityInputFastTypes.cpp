@@ -3,6 +3,7 @@
 
 #include "Input/AbilityInputFastTypes.h"
 
+#include "Abilities/GameplayAbility.h"
 #include "Input/AbilityInputManagerComponent.h"
 
 
@@ -38,7 +39,7 @@ void FAbilityInputContainer::AddAbilityInputInstance(const FAbilityInputInstance
 		{
 			if (Item.InputSlot == Instance.InputSlot)
 			{
-				Item.Ability = Instance.Ability;
+				Item.AbilityClass = Instance.AbilityClass;
 				Item.AbilitySpecHandle = Instance.AbilitySpecHandle;
 				Owner->OnAbilityInputChanged(Item, InputSet);
 				MarkItemDirty(Item);
@@ -70,14 +71,14 @@ void FAbilityInputContainer::RemoveAbilityInputInstance(const FAbilityInputSlot&
 	}
 }
 
-TArray<FAbilityInputSlot> FAbilityInputContainer::RemoveAbilityInputInstance(UAbilityInput* AbilityInput)
+TArray<FAbilityInputSlot> FAbilityInputContainer::RemoveAbilityInputInstance(const TSubclassOf<UGameplayAbility>& AbilityClass)
 {
 	TArray<FAbilityInputSlot> Result;
 	if (Owner)
 	{
 		for (int32 Idx = Items.Num() - 1; Idx >= 0; Idx--)
 		{
-			if (Items[Idx].Ability == AbilityInput)
+			if (Items[Idx].AbilityClass == AbilityClass)
 			{
 				FAbilityInputInstance OldItem = Items[Idx];
 				Items.RemoveAt(Idx);

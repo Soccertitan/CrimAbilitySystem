@@ -52,10 +52,10 @@ public:
 
 	/**
 	 * Adds the ability to a queue to be activated via ProcessAbilityInput
-	 * @param AbilityInput The Ability that is pressed.
+	 * @param AbilityClass The Ability that is pressed.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void InputPressed(const UAbilityInput* AbilityInput);
+	void InputPressed(const TSubclassOf<UGameplayAbility> AbilityClass);
 	
 	/**
 	 * Adds all abilities to a queue to be activated via ProcessAbilityInput
@@ -67,10 +67,10 @@ public:
 
 	/**
 	 * Adds the ability to a queue to run AbilitySpecInputReleased.
-	 * @param AbilityInput The Ability that is pressed.
+	 * @param AbilityClass The Ability that is pressed.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void InputReleased(const UAbilityInput* AbilityInput);
+	void InputReleased(const TSubclassOf<UGameplayAbility> AbilityClass);
 	
 	/**
 	 * Adds all abilities to a queue to run AbilitySpecInputReleased against.
@@ -122,9 +122,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
 	void ClearAbilityInputs(UPARAM(ref) const TArray<FAbilityInputSlot>& InputSlots, const int32 InputSet = 1);
 
-	/** Removes all instances with the matching AbilityInput from the local AbilityInputSets. Updating the active set as required. */
+	/** Removes all instances with the matching Ability from the local AbilityInputSets. Updating the active set as required. */
 	UFUNCTION(BlueprintCallable, Category = "Crim Ability System|Input")
-	void RemoveAllAbilityInputInstanceWithMatchingAbility(UAbilityInput* AbilityInput);
+	void RemoveAllAbilityInputInstanceWithMatchingAbility(const TSubclassOf<UGameplayAbility> AbilityClass);
 	
 	/** Overrides the Active set with the passed in set. If nullptr, disables the override. */
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Crim Ability System|Input")
@@ -221,24 +221,24 @@ private:
 	TObjectPtr<UCrimAbilitySystemComponent> AbilitySystemComponent;
 
 	// Handles to abilities that had their input pressed this frame.
-	TArray<FAbilityInputHandle> InputPressedHandles;
+	TArray<FGameplayAbilitySpecHandle> InputPressedHandles;
 	// Handles to abilities that had their input released this frame.
 	TArray<FGameplayAbilitySpecHandle> InputReleasedHandles;
 	// Handles to abilities that have their input held.
-	TArray<FAbilityInputHandle> InputHeldHandles;
+	TArray<FGameplayAbilitySpecHandle> InputHeldHandles;
 	
-	FGameplayAbilitySpecHandle FindAbilitySpecHandle(const UAbilityInput* AbilityInput) const;
+	FGameplayAbilitySpecHandle FindAbilitySpecHandle(const TSubclassOf<UGameplayAbility>& AbilityClass) const;
 	
-	void InternalInputPressed(const FGameplayAbilitySpecHandle& Handle, const UAbilityInput* AbilityInput);
-	void InternalInputReleased(const FGameplayAbilitySpecHandle& Handle);
+	void InputPressedInternal(const FGameplayAbilitySpecHandle& Handle);
+	void InputReleasedInternal(const FGameplayAbilitySpecHandle& Handle);
 	
 	void UpdateAbilitySpecHandleOnAbilityInputInstances(const UGameplayAbility* Ability, const FGameplayAbilitySpecHandle& Handle);
 	void ClearAllAbilitySpecHandles();
 	
 	// void InternalAddAbilityInputInstance(const FAbilityInputSlot& InputSlot, UAbilityInput* AbilityInput, FAbilityInputContainer& InputSet);
 	/** Updates the active ability input set from client. */
-	void InternalSetActiveAbilityInputs(const TArray<FAbilityInputInstance>& Instances, const bool bReset);
-	void InternalClearActiveAbilityInputs(const TArray<FAbilityInputSlot>& InputSlots);
+	void SetActiveAbilityInputsInternal(const TArray<FAbilityInputInstance>& Instances, const bool bReset);
+	void ClearActiveAbilityInputsInternal(const TArray<FAbilityInputSlot>& InputSlots);
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetActiveAbilityInputs(const TArray<FAbilityInputInstance>& Instances, const bool bReset);
