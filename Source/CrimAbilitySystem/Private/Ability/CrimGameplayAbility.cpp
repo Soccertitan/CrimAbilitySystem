@@ -285,28 +285,6 @@ void UCrimGameplayAbility::ApplyCost(const FGameplayAbilitySpecHandle Handle, co
 
 	check(ActorInfo);
 
-	// Used to determine if the ability actually hit a target (as some costs are only spent on successful attempts)
-	auto DetermineIfAbilityHitTarget = [&]()
-	{
-		if (ActorInfo->IsNetAuthority())
-		{
-			if (UCrimAbilitySystemComponent* ASC = Cast<UCrimAbilitySystemComponent>(ActorInfo->AbilitySystemComponent.Get()))
-			{
-				FGameplayAbilityTargetDataHandle TargetData;
-				ASC->GetAbilityTargetData(Handle, ActivationInfo, TargetData);
-				for (int32 TargetDataIdx = 0; TargetDataIdx < TargetData.Data.Num(); ++TargetDataIdx)
-				{
-					if (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetData, TargetDataIdx))
-					{
-						return true;
-					}
-				}
-			}
-		}
-
-		return false;
-	};
-
 	// Pay any additional costs
 	bool bAbilityHitTarget = false;
 	bool bHasDeterminedIfAbilityHitTarget = false;
@@ -318,7 +296,7 @@ void UCrimGameplayAbility::ApplyCost(const FGameplayAbilitySpecHandle Handle, co
 			{
 				if (!bHasDeterminedIfAbilityHitTarget)
 				{
-					bAbilityHitTarget = DetermineIfAbilityHitTarget();
+					bAbilityHitTarget = DetermineIfAbilityHitTarget(Handle, ActorInfo, ActivationInfo);
 					bHasDeterminedIfAbilityHitTarget = true;
 				}
 
@@ -501,4 +479,30 @@ bool UCrimGameplayAbility::DoesAbilitySatisfyTagRequirements(const UAbilitySyste
 	}
 
 	return true;
+}
+
+bool UCrimGameplayAbility::DetermineIfAbilityHitTarget(FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
+{
+	if (ActorInfo->IsNetAuthority())
+	{
+		if (UCrimAbilitySystemComponent* ASC = Cast<UCrimAbilitySystemComponent>(ActorInfo->AbilitySystemComponent.Get()))
+		{
+			FGameplayAbilityTargetDataHandle TargetData;
+			ASC->GetAbilityTargetData(Handle, ActivationInfo, TargetData);
+			for (int32 TargetDataIdx = 0; TargetDataIdx < TargetData.Data.Num(); ++TargetDataIdx)
+			{
+				if (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetData, TargetDataIdx))
+				{
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+const TArray<UAbilityCost*>& UCrimGameplayAbility::GetAdditionalCosts() const
+{
+	return AdditionalCosts;
 }
